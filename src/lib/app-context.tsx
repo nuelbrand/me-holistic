@@ -77,6 +77,7 @@ interface Ctx extends State {
   addPrompt: (s: string) => void;
   removePrompt: (i: number) => void;
   setBible: (book: string, chapter: number) => void;
+  setBibleTranslation: (t: string) => void;
 }
 
 const STORAGE_KEY = "me.app.state.v1";
