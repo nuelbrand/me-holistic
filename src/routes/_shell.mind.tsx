@@ -92,10 +92,13 @@ function Mind() {
               ))}
             </div>
           )}
+        </div>
 
-        <div className="lift rounded-3xl border border-border bg-card p-6">
+        <div className="lift rounded-3xl border border-border bg-card p-6 lg:col-span-3">
           <div className="text-xs uppercase tracking-wider text-mind">Weekly mood</div>
+          <p className="text-[11px] text-muted-foreground mt-1">Synced with your dashboard log.</p>
           <div className="mt-4 flex items-end gap-1.5 h-40">
+            {moodHistory.length === 0 && <div className="text-xs text-muted-foreground self-center">Log a mood on the dashboard to start your chart.</div>}
             {moodHistory.slice(-7).map((d, i) => {
               const h = d.mood === "Excellent" ? 100 : d.mood === "Good" ? 75 : d.mood === "Neutral" ? 45 : 25;
               return (
