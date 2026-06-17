@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Heart, MessageCircle, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Heart, MessageCircle, Plus, Users as UsersIcon } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
@@ -11,10 +11,14 @@ export const Route = createFileRoute("/_shell/community")({
 });
 
 function Community() {
-  const { tribes, joinedTribes, joinTribe, posts, likePost, commentPost, addPost } = useApp();
-  const [active, setActive] = useState(tribes[0]);
+  const { tribes, joinedTribes, joinTribe, posts, likePost, commentPost, addPost, addTribe } = useApp();
+  const [active, setActive] = useState<string | undefined>(tribes[0]);
   const [newPost, setNewPost] = useState("");
   const [commentDraft, setCommentDraft] = useState<Record<string, string>>({});
+  const [creating, setCreating] = useState(false);
+  const [tribeName, setTribeName] = useState("");
+  const [tribeDesc, setTribeDesc] = useState("");
+  useEffect(() => { if (!active && tribes.length) setActive(tribes[0]); }, [tribes, active]);
   const filtered = posts.filter((p) => p.tribe === active);
 
   return (
