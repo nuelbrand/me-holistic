@@ -41,6 +41,7 @@ interface State {
   promptList: string[];
   bibleBook: string;
   bibleChapter: number;
+  bibleTranslation: string;
 }
 
 interface Ctx extends State {
@@ -76,6 +77,7 @@ interface Ctx extends State {
   addPrompt: (s: string) => void;
   removePrompt: (i: number) => void;
   setBible: (book: string, chapter: number) => void;
+  setBibleTranslation: (t: string) => void;
 }
 
 const STORAGE_KEY = "me.app.state.v1";
@@ -134,6 +136,7 @@ const defaultState: State = {
   ],
   bibleBook: "John",
   bibleChapter: 1,
+  bibleTranslation: "kjv",
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -197,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addPrompt: (s2) => update((s) => ({ promptList: [...s.promptList, s2] })),
     removePrompt: (i) => update((s) => ({ promptList: s.promptList.filter((_, idx) => idx !== i) })),
     setBible: (bibleBook, bibleChapter) => update({ bibleBook, bibleChapter }),
+    setBibleTranslation: (bibleTranslation) => update({ bibleTranslation }),
   }), [state]);
 
   return <AppCtx.Provider value={ctx}>{children}</AppCtx.Provider>;
