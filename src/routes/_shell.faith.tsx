@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, BookOpen, Save } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { BibleReader } from "@/components/BibleReader";
@@ -22,9 +22,10 @@ const PROMISES: Record<string, string[]> = {
 };
 
 function Faith() {
-  const { verse, prayers, addPrayer, togglePrayer, notes, setNotes } = useApp();
+  const { verse, prayers, addPrayer, togglePrayer, notes, setNotes, saveDevotionalNote, resources } = useApp();
   const [feeling, setFeeling] = useState<string | null>(null);
   const [newPrayer, setNewPrayer] = useState("");
+  const reading = resources.filter((r) => r.category === "Faith" && r.status === "in-progress");
 
   return (
     <div>
@@ -38,8 +39,31 @@ function Faith() {
         </div>
 
         <div className="lift rounded-3xl border border-border bg-card p-6">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Devotional notes</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Devotional notes</div>
+            <button onClick={saveDevotionalNote} className="press inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-border"><Save className="h-3 w-3" /> Save</button>
+          </div>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What is the Spirit highlighting…" className="mt-3 w-full h-40 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+        </div>
+
+        <div className="lift rounded-3xl border border-border bg-card p-6 lg:col-span-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-wider text-faith inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" /> Currently reading</div>
+            <Link to="/resources" className="text-xs text-muted-foreground hover:text-foreground">Manage library →</Link>
+          </div>
+          {reading.length === 0 ? (
+            <p className="text-sm text-muted-foreground mt-3">Mark a Faith resource as <em>In Progress</em> in the library and it'll appear here.</p>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+              {reading.map((r) => (
+                <div key={r.id} className="p-3 rounded-xl bg-faith/10 border border-faith/30">
+                  <div className="text-[10px] uppercase tracking-wider text-faith">{r.type}</div>
+                  <div className="font-bold text-sm mt-0.5">{r.title}</div>
+                  {r.summary && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.summary}</div>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="lift rounded-3xl border border-border bg-card p-6 lg:col-span-2">
