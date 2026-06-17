@@ -136,6 +136,7 @@ const defaultState: State = {
   ],
   bibleBook: "John",
   bibleChapter: 1,
+  bibleTranslation: "kjv",
 };
 
 const AppCtx = createContext<Ctx | null>(null);
