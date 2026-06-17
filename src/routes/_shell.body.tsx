@@ -189,5 +189,3 @@ function Pill2({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-// reused Heart icon import (kept to avoid unused warning if needed)
-export const _ = Heart;
