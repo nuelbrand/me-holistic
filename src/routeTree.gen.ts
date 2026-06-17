@@ -9,38 +9,161 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShellResourcesRouteImport } from './routes/_shell.resources'
+import { Route as ShellMindRouteImport } from './routes/_shell.mind'
+import { Route as ShellFaithRouteImport } from './routes/_shell.faith'
+import { Route as ShellDashboardRouteImport } from './routes/_shell.dashboard'
+import { Route as ShellCommunityRouteImport } from './routes/_shell.community'
+import { Route as ShellBodyRouteImport } from './routes/_shell.body'
+import { Route as ShellAdminRouteImport } from './routes/_shell.admin'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShellRoute = ShellRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShellResourcesRoute = ShellResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellMindRoute = ShellMindRouteImport.update({
+  id: '/mind',
+  path: '/mind',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellFaithRoute = ShellFaithRouteImport.update({
+  id: '/faith',
+  path: '/faith',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellDashboardRoute = ShellDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellCommunityRoute = ShellCommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellBodyRoute = ShellBodyRouteImport.update({
+  id: '/body',
+  path: '/body',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellAdminRoute = ShellAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => ShellRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/register': typeof RegisterRoute
+  '/admin': typeof ShellAdminRoute
+  '/body': typeof ShellBodyRoute
+  '/community': typeof ShellCommunityRoute
+  '/dashboard': typeof ShellDashboardRoute
+  '/faith': typeof ShellFaithRoute
+  '/mind': typeof ShellMindRoute
+  '/resources': typeof ShellResourcesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/register': typeof RegisterRoute
+  '/admin': typeof ShellAdminRoute
+  '/body': typeof ShellBodyRoute
+  '/community': typeof ShellCommunityRoute
+  '/dashboard': typeof ShellDashboardRoute
+  '/faith': typeof ShellFaithRoute
+  '/mind': typeof ShellMindRoute
+  '/resources': typeof ShellResourcesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_shell': typeof ShellRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/_shell/admin': typeof ShellAdminRoute
+  '/_shell/body': typeof ShellBodyRoute
+  '/_shell/community': typeof ShellCommunityRoute
+  '/_shell/dashboard': typeof ShellDashboardRoute
+  '/_shell/faith': typeof ShellFaithRoute
+  '/_shell/mind': typeof ShellMindRoute
+  '/_shell/resources': typeof ShellResourcesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/register'
+    | '/admin'
+    | '/body'
+    | '/community'
+    | '/dashboard'
+    | '/faith'
+    | '/mind'
+    | '/resources'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/register'
+    | '/admin'
+    | '/body'
+    | '/community'
+    | '/dashboard'
+    | '/faith'
+    | '/mind'
+    | '/resources'
+  id:
+    | '__root__'
+    | '/'
+    | '/_shell'
+    | '/register'
+    | '/_shell/admin'
+    | '/_shell/body'
+    | '/_shell/community'
+    | '/_shell/dashboard'
+    | '/_shell/faith'
+    | '/_shell/mind'
+    | '/_shell/resources'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ShellRoute: typeof ShellRouteWithChildren
+  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_shell': {
+      id: '/_shell'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ShellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +171,85 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_shell/resources': {
+      id: '/_shell/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ShellResourcesRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/mind': {
+      id: '/_shell/mind'
+      path: '/mind'
+      fullPath: '/mind'
+      preLoaderRoute: typeof ShellMindRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/faith': {
+      id: '/_shell/faith'
+      path: '/faith'
+      fullPath: '/faith'
+      preLoaderRoute: typeof ShellFaithRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/dashboard': {
+      id: '/_shell/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof ShellDashboardRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/community': {
+      id: '/_shell/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof ShellCommunityRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/body': {
+      id: '/_shell/body'
+      path: '/body'
+      fullPath: '/body'
+      preLoaderRoute: typeof ShellBodyRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/admin': {
+      id: '/_shell/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof ShellAdminRouteImport
+      parentRoute: typeof ShellRoute
+    }
   }
 }
 
+interface ShellRouteChildren {
+  ShellAdminRoute: typeof ShellAdminRoute
+  ShellBodyRoute: typeof ShellBodyRoute
+  ShellCommunityRoute: typeof ShellCommunityRoute
+  ShellDashboardRoute: typeof ShellDashboardRoute
+  ShellFaithRoute: typeof ShellFaithRoute
+  ShellMindRoute: typeof ShellMindRoute
+  ShellResourcesRoute: typeof ShellResourcesRoute
+}
+
+const ShellRouteChildren: ShellRouteChildren = {
+  ShellAdminRoute: ShellAdminRoute,
+  ShellBodyRoute: ShellBodyRoute,
+  ShellCommunityRoute: ShellCommunityRoute,
+  ShellDashboardRoute: ShellDashboardRoute,
+  ShellFaithRoute: ShellFaithRoute,
+  ShellMindRoute: ShellMindRoute,
+  ShellResourcesRoute: ShellResourcesRoute,
+}
+
+const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ShellRoute: ShellRouteWithChildren,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
