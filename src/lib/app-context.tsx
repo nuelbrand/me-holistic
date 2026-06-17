@@ -200,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addPrompt: (s2) => update((s) => ({ promptList: [...s.promptList, s2] })),
     removePrompt: (i) => update((s) => ({ promptList: s.promptList.filter((_, idx) => idx !== i) })),
     setBible: (bibleBook, bibleChapter) => update({ bibleBook, bibleChapter }),
+    setBibleTranslation: (bibleTranslation) => update({ bibleTranslation }),
   }), [state]);
 
   return <AppCtx.Provider value={ctx}>{children}</AppCtx.Provider>;
