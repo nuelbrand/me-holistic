@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Smile, Meh, Frown, Star, Plus, X, Zap } from "lucide-react";
+import { Smile, Meh, Frown, Star, Plus, X, Zap, ArrowRight } from "lucide-react";
 import { useApp, type Mood } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
