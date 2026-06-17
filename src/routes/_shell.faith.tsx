@@ -60,18 +60,8 @@ function Faith() {
           )}
         </div>
 
-        <div className="lift rounded-3xl border border-border bg-card p-6">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-faith"><BookOpen className="h-3.5 w-3.5" /> Bible reader</div>
-          <div className="mt-3 flex gap-2">
-            <select value={bibleBook} onChange={(e) => setBible(e.target.value, 1)} className="press bg-background border border-border rounded-lg px-3 py-2 text-sm flex-1">
-              {BOOKS.map((b) => <option key={b}>{b}</option>)}
-            </select>
-            <input type="number" min={1} max={150} value={bibleChapter} onChange={(e) => setBible(bibleBook, +e.target.value || 1)} className="w-20 bg-background border border-border rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div className="mt-3 p-4 rounded-xl bg-background border border-border text-sm leading-relaxed max-h-48 overflow-auto">
-            <div className="font-bold mb-2">{bibleBook} {bibleChapter}</div>
-            <p className="text-muted-foreground">In the beginning was the Word, and the Word was with God, and the Word was God… (Scripture text loads from your preferred translation.)</p>
-          </div>
+        <div className="lg:col-span-3">
+          <BibleReader />
         </div>
 
         <div className="lift rounded-3xl border border-border bg-card p-6 lg:col-span-3">
