@@ -157,10 +157,10 @@ function PhaseSwitcher({ value, onChange, compact }: { value: Phase; onChange: (
 }
 
 export function PageHeader({ title, subtitle, accent }: { title: string; subtitle?: string; accent?: "faith" | "mind" | "body" }) {
-  const color = accent === "faith" ? "text-faith" : accent === "mind" ? "text-mind" : accent === "body" ? "text-body" : "text-primary";
+  const color = accent === "faith" ? "text-faith" : accent === "mind" ? "text-mind" : accent === "body" ? "text-body" : "text-foreground";
   return (
     <div className="mb-8 animate-[fade-in_0.4s_ease-out]">
-      <h1 className={cn("text-3xl md:text-4xl font-black tracking-tight", color)}>{title}<span className="text-foreground">.</span></h1>
+      <h1 className={cn("text-3xl md:text-4xl font-black tracking-tight", color)}>{title}<span className="text-primary">.</span></h1>
       {subtitle && <p className="text-muted-foreground mt-2 max-w-2xl">{subtitle}</p>}
     </div>
   );
