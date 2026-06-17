@@ -139,20 +139,23 @@ const defaultState: State = {
 const AppCtx = createContext<Ctx | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<State>(() => {
-    if (typeof window === "undefined") return defaultState;
+  const [state, setState] = useState<State>(defaultState);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Load persisted state on the client after first render to avoid SSR/CSR mismatch.
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return { ...defaultState, ...JSON.parse(raw) };
+      if (raw) setState((s) => ({ ...s, ...JSON.parse(raw) }));
     } catch {}
-    return defaultState;
-  });
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (!hydrated) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
     document.documentElement.classList.toggle("dark", state.theme === "dark");
-  }, [state]);
+  }, [state, hydrated]);
 
   const update = (patch: Partial<State> | ((s: State) => Partial<State>)) =>
     setState((s) => ({ ...s, ...(typeof patch === "function" ? patch(s) : patch) }));
