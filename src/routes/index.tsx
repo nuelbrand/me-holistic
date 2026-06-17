@@ -22,7 +22,8 @@ function Landing() {
           <button onClick={toggleTheme} className="press p-2 rounded-lg border border-border" aria-label="Toggle theme">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
-          <Link to="/register" className="press text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-primary-foreground">Start Free</Link>
+          <Link to="/auth" className="press text-sm font-semibold px-4 py-2 rounded-xl border border-border">Sign in</Link>
+          <Link to="/auth" className="press text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-primary-foreground">Start Here</Link>
         </div>
       </header>
 
@@ -37,11 +38,8 @@ function Landing() {
           Build the rituals that build the person.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 animate-[fade-in_0.7s_ease-out]">
-          <Link to="/register" className="press inline-flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-6 py-4 text-base font-semibold shadow-lg">
-            Start Free <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link to="/dashboard" className="press inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-6 py-4 text-base font-semibold">
-            Peek the dashboard
+          <Link to="/auth" className="press inline-flex items-center gap-2 rounded-2xl bg-primary text-primary-foreground px-6 py-4 text-base font-semibold shadow-lg">
+            Start Here <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </section>

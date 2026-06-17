@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Droplet, Moon, Pill, Plus, Minus, TrendingUp, MessageSquare } from "lucide-react";
+import { Droplet, Moon, Pill, Plus, Minus, TrendingUp, MessageSquare, BookOpen, ExternalLink } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
@@ -57,22 +57,52 @@ function Health() {
         <p className="text-xs text-muted-foreground mt-1">Lifestyle medicine first.</p>
         <button onClick={logPillFreeDay} className="press mt-3 w-full py-2 rounded-xl bg-body text-body-foreground text-sm font-semibold">+ Log a day</button>
       </Card>
-      <Card title="Food template" className="md:col-span-2">
-        <ul className="mt-3 text-sm space-y-2 text-muted-foreground">
-          <li>🥣 Breakfast: oats + berries + nut butter</li>
-          <li>🥗 Lunch: protein + leafy greens + whole grain</li>
-          <li>🍲 Dinner: light protein + roasted veg</li>
-          <li>🍎 Snack: fruit + handful of nuts</li>
-        </ul>
-      </Card>
-      <Card title="Exercise template">
-        <ul className="mt-3 text-sm space-y-2 text-muted-foreground">
-          <li>Mon · 30-min walk</li>
-          <li>Wed · Strength 25 min</li>
-          <li>Fri · Mobility + stretch</li>
-          <li>Sat · Long outdoor activity</li>
-        </ul>
-      </Card>
+      <FoodCard />
+      <ExerciseCard />
+      <ReadingCard />
+    </div>
+  );
+}
+
+function FoodCard() {
+  const { foodPlan, setFoodPlan } = useApp();
+  return (
+    <div className="lift rounded-3xl border border-border bg-card p-6 md:col-span-2">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-body">Food plan</div>
+      <textarea value={foodPlan} onChange={(e) => setFoodPlan(e.target.value)} className="mt-3 w-full h-32 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+    </div>
+  );
+}
+function ExerciseCard() {
+  const { exercisePlan, setExercisePlan } = useApp();
+  return (
+    <div className="lift rounded-3xl border border-border bg-card p-6">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-body">Exercise plan</div>
+      <textarea value={exercisePlan} onChange={(e) => setExercisePlan(e.target.value)} className="mt-3 w-full h-32 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+    </div>
+  );
+}
+function ReadingCard() {
+  const { resources } = useApp();
+  const reading = resources.filter((r) => r.category === "Body" && r.status === "in-progress");
+  return (
+    <div className="lift rounded-3xl border border-border bg-card p-6 md:col-span-3">
+      <div className="flex items-center justify-between">
+        <div className="text-xs uppercase tracking-wider text-body inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" /> Currently reading</div>
+        <Link to="/resources" className="text-xs text-muted-foreground hover:text-foreground">Library →</Link>
+      </div>
+      {reading.length === 0 ? (
+        <p className="text-sm text-muted-foreground mt-3">Mark a Body resource as <em>In Progress</em> in the library to surface it here.</p>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+          {reading.map((r) => (
+            <div key={r.id} className="p-3 rounded-xl bg-body/10 border border-body/30">
+              <div className="text-[10px] uppercase text-body">{r.type}</div>
+              <div className="font-bold text-sm">{r.title}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

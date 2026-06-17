@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Play, Pause, Shuffle, BookOpen, Headphones, Video } from "lucide-react";
+import { Play, Pause, Shuffle, BookOpen, Headphones, Video, Save } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
@@ -21,11 +21,12 @@ const LIB = [
 const FILTERS = ["All", "Anxious", "Stressed", "Fatigued", "Restless"];
 
 function Mind() {
-  const { journal, setJournal, promptList, moodHistory } = useApp();
+  const { journal, setJournal, saveJournalEntry, promptList, moodHistory, resources } = useApp();
   const [filter, setFilter] = useState("All");
   const [playing, setPlaying] = useState<number | null>(null);
   const [prompt, setPrompt] = useState(promptList[0] ?? "");
   const items = filter === "All" ? LIB : LIB.filter((l) => l.tag === filter);
+  const reading = resources.filter((r) => r.category === "Mind" && r.status === "in-progress");
 
   return (
     <div>
@@ -69,11 +70,35 @@ function Mind() {
           </div>
           <p key={prompt} className="mt-3 italic text-mind animate-[fade-in_0.3s_ease-out]">{prompt}</p>
           <textarea value={journal} onChange={(e) => setJournal(e.target.value)} placeholder="Write without filter…" className="mt-3 w-full h-48 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+          <button onClick={() => saveJournalEntry("cognitive")} className="press mt-3 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-mind text-mind-foreground text-xs font-semibold">
+            <Save className="h-3.5 w-3.5" /> Save entry
+          </button>
         </div>
 
         <div className="lift rounded-3xl border border-border bg-card p-6">
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-wider text-mind inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" /> Currently reading</div>
+            <Link to="/resources" className="text-xs text-muted-foreground hover:text-foreground">Library →</Link>
+          </div>
+          {reading.length === 0 ? (
+            <p className="text-sm text-muted-foreground mt-3">Mark a Mind resource as <em>In Progress</em> to surface it here.</p>
+          ) : (
+            <div className="space-y-2 mt-3">
+              {reading.map((r) => (
+                <div key={r.id} className="p-3 rounded-xl bg-mind/10 border border-mind/30">
+                  <div className="text-[10px] uppercase text-mind">{r.type}</div>
+                  <div className="font-bold text-sm">{r.title}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="lift rounded-3xl border border-border bg-card p-6 lg:col-span-3">
           <div className="text-xs uppercase tracking-wider text-mind">Weekly mood</div>
+          <p className="text-[11px] text-muted-foreground mt-1">Synced with your dashboard log.</p>
           <div className="mt-4 flex items-end gap-1.5 h-40">
+            {moodHistory.length === 0 && <div className="text-xs text-muted-foreground self-center">Log a mood on the dashboard to start your chart.</div>}
             {moodHistory.slice(-7).map((d, i) => {
               const h = d.mood === "Excellent" ? 100 : d.mood === "Good" ? 75 : d.mood === "Neutral" ? 45 : 25;
               return (

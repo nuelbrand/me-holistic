@@ -1,10 +1,14 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { ArrowRight, ArrowLeft, Check, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useApp, type Phase } from "@/lib/app-context";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/register")({
+  ssr: false,
   head: () => ({ meta: [{ title: "Begin · me." }, { name: "description", content: "Set up your me. profile." }] }),
   component: Register,
 });
@@ -19,16 +23,44 @@ const FOCUSES = ["Improve my relationship with God", "Cognitive Renewal", "Healt
 
 function Register() {
   const nav = useNavigate();
+  const { user, profile, loading, refreshProfile } = useAuth();
   const { setUser, setPhase } = useApp();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ name: "", email: "", password: "", phase: "Employee" as Phase, detailA: "", detailB: "", focus: FOCUSES[0] });
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: "", phase: "Employee" as Phase, detailA: "", detailB: "", focus: FOCUSES[0] });
 
-  const next = () => setStep((s) => Math.min(4, s + 1));
+  useEffect(() => {
+    if (!loading && !user) nav({ to: "/auth", replace: true });
+  }, [user, loading, nav]);
+
+  useEffect(() => {
+    if (profile?.username) setForm((f) => ({ ...f, name: profile.username || "" }));
+  }, [profile?.username]);
+
+  const next = () => setStep((s) => Math.min(3, s + 1));
   const back = () => setStep((s) => Math.max(1, s - 1));
-  const finish = () => {
-    setUser({ name: form.name || "Friend", email: form.email, detailA: form.detailA, detailB: form.detailB, focus: form.focus });
-    setPhase(form.phase);
-    nav({ to: "/dashboard" });
+
+  const finish = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      await supabase.from("profiles").update({
+        username: form.name || "Friend",
+        life_phase: form.phase,
+        detail_a: form.detailA,
+        detail_b: form.detailB,
+        focus: form.focus,
+      }).eq("id", user.id);
+      await refreshProfile();
+      setUser({ name: form.name, detailA: form.detailA, detailB: form.detailB, focus: form.focus });
+      setPhase(form.phase);
+      toast.success("You're set. Welcome to me.");
+      nav({ to: "/dashboard" });
+    } catch (e: any) {
+      toast.error(e.message || "Couldn't save profile");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const labels: Record<Phase, [string, string]> = {
@@ -41,9 +73,9 @@ function Register() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="flex items-center justify-between px-6 md:px-10 py-5">
-        <span className="text-2xl font-black">me<span className="text-primary">.</span></span>
+        <Link to="/" className="text-2xl font-black">me<span className="text-primary">.</span></Link>
         <div className="flex items-center gap-1">
-          {[1, 2, 3, 4].map((n) => (
+          {[1, 2, 3].map((n) => (
             <div key={n} className={cn("h-1.5 rounded-full transition-all duration-300", n <= step ? "bg-primary w-10" : "bg-muted w-6")} />
           ))}
         </div>
@@ -53,26 +85,13 @@ function Register() {
         <div key={step} className="w-full max-w-xl bg-card border border-border rounded-3xl p-6 md:p-10 shadow-xl animate-[slide-in_0.35s_ease-out]">
           {step === 1 && (
             <>
-              <h2 className="text-2xl md:text-3xl font-black mb-2">Let's meet you<span className="text-primary">.</span></h2>
-              <p className="text-muted-foreground mb-6">Just the basics to set the stage.</p>
-              <div className="space-y-4">
-                <Field label="Full name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder="Sarah Chen" />
-                <Field label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} placeholder="you@example.com" type="email" />
-                <Field label="Password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} placeholder="••••••••" type="password" />
-              </div>
-            </>
-          )}
-          {step === 2 && (
-            <>
               <h2 className="text-2xl md:text-3xl font-black mb-2">What season are you in?</h2>
               <p className="text-muted-foreground mb-6">We tune your daily rhythm to it.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Your name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder="Sarah Chen" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                 {PHASES.map((p) => (
-                  <button
-                    key={p.phase}
-                    onClick={() => setForm({ ...form, phase: p.phase })}
-                    className={cn("press text-left p-4 rounded-2xl border-2 transition-all", form.phase === p.phase ? "border-primary bg-primary/5 shadow-md" : "border-border hover:border-primary/40")}
-                  >
+                  <button key={p.phase} onClick={() => setForm({ ...form, phase: p.phase })}
+                    className={cn("press text-left p-4 rounded-2xl border-2 transition-all", form.phase === p.phase ? "border-primary bg-primary/5 shadow-md" : "border-border hover:border-primary/40")}>
                     <div className="font-bold">{p.phase}</div>
                     <div className="text-xs text-muted-foreground mt-1">{p.blurb}</div>
                   </button>
@@ -80,7 +99,7 @@ function Register() {
               </div>
             </>
           )}
-          {step === 3 && (
+          {step === 2 && (
             <>
               <h2 className="text-2xl md:text-3xl font-black mb-2">Tell us a bit more.</h2>
               <p className="text-muted-foreground mb-6">Context shapes the coaching.</p>
@@ -90,17 +109,14 @@ function Register() {
               </div>
             </>
           )}
-          {step === 4 && (
+          {step === 3 && (
             <>
               <h2 className="text-2xl md:text-3xl font-black mb-2">Where do we start?</h2>
               <p className="text-muted-foreground mb-6">Pick your first focus — you can always evolve.</p>
               <div className="grid grid-cols-1 gap-3">
                 {FOCUSES.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setForm({ ...form, focus: f })}
-                    className={cn("press text-left p-4 rounded-2xl border-2 flex items-center justify-between", form.focus === f ? "border-primary bg-primary/5" : "border-border")}
-                  >
+                  <button key={f} onClick={() => setForm({ ...form, focus: f })}
+                    className={cn("press text-left p-4 rounded-2xl border-2 flex items-center justify-between", form.focus === f ? "border-primary bg-primary/5" : "border-border")}>
                     <span className="font-medium">{f}</span>
                     {form.focus === f && <Check className="h-5 w-5 text-primary" />}
                   </button>
@@ -113,13 +129,13 @@ function Register() {
             <button onClick={back} disabled={step === 1} className="press inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border disabled:opacity-40">
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
-            {step < 4 ? (
+            {step < 3 ? (
               <button onClick={next} className="press inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold">
                 Continue <ArrowRight className="h-4 w-4" />
               </button>
             ) : (
-              <button onClick={finish} className="press inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold">
-                Enter me. <ArrowRight className="h-4 w-4" />
+              <button onClick={finish} disabled={saving} className="press inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Enter me. <ArrowRight className="h-4 w-4" /></>}
               </button>
             )}
           </div>
@@ -133,13 +149,8 @@ function Field({ label, value, onChange, placeholder, type = "text" }: { label: 
   return (
     <label className="block">
       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="mt-1.5 w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring transition-all"
-      />
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+        className="mt-1.5 w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ring transition-all" />
     </label>
   );
 }

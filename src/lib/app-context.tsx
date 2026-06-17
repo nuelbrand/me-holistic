@@ -1,26 +1,36 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth, type Phase } from "@/lib/auth";
 
-export type Phase = "Student" | "Employee" | "Business Owner" | "In-Transition";
+export type { Phase };
 export type Mood = "Excellent" | "Good" | "Neutral" | "Stressed";
-
-export interface User {
-  name: string;
-  email: string;
-  phase: Phase;
-  detailA: string; // school/company/business/transition target
-  detailB: string; // major/role/industry/next industry
-  focus: string;
-}
 
 export interface Task { id: string; text: string; done: boolean; time?: string }
 export interface Prayer { id: string; text: string; answered: boolean }
 export interface Post { id: string; tribe: string; author: string; text: string; likes: number; liked: boolean; comments: string[] }
-export interface Resource { id: string; title: string; type: "Books" | "Audio" | "Frameworks" | "Checklists"; summary: string; bookmarked: boolean }
+export interface Resource {
+  id: string;
+  title: string;
+  type: "Books" | "Audio" | "Frameworks" | "Checklists" | "Video";
+  category: "Faith" | "Mind" | "Body" | "General";
+  status: "not-started" | "in-progress" | "completed";
+  summary: string;
+  bookmarked: boolean;
+}
 export interface MoodLog { day: string; mood: Mood }
+
+export interface ProfileLike {
+  name: string;
+  email: string;
+  phase: Phase;
+  detailA: string;
+  detailB: string;
+  focus: string;
+}
 
 interface State {
   theme: "light" | "dark";
-  user: User;
+  user: ProfileLike;
   mood: Mood | null;
   moodHistory: MoodLog[];
   tasks: Task[];
@@ -33,6 +43,8 @@ interface State {
   pillsFreeDays: number;
   savingsRatio: number;
   income: number;
+  foodPlan: string;
+  exercisePlan: string;
   posts: Post[];
   tribes: string[];
   joinedTribes: string[];
@@ -47,7 +59,7 @@ interface State {
 interface Ctx extends State {
   setTheme: (t: "light" | "dark") => void;
   toggleTheme: () => void;
-  setUser: (u: Partial<User>) => void;
+  setUser: (u: Partial<ProfileLike>) => void;
   setPhase: (p: Phase) => void;
   setMood: (m: Mood) => void;
   addTask: (text: string) => void;
@@ -57,22 +69,26 @@ interface Ctx extends State {
   addPrayer: (text: string) => void;
   togglePrayer: (id: string) => void;
   setNotes: (s: string) => void;
+  saveDevotionalNote: () => Promise<void>;
   setJournal: (s: string) => void;
+  saveJournalEntry: (category?: string) => Promise<void>;
   setWater: (n: number) => void;
   setSleep: (n: number) => void;
   logPillFreeDay: () => void;
   setSavingsRatio: (n: number) => void;
   setIncome: (n: number) => void;
-  addPost: (tribe: string, text: string) => void;
-  likePost: (id: string) => void;
+  setFoodPlan: (s: string) => void;
+  setExercisePlan: (s: string) => void;
+  addPost: (tribe: string, text: string) => Promise<void>;
+  likePost: (id: string) => Promise<void>;
   commentPost: (id: string, text: string) => void;
-  joinTribe: (t: string) => void;
-  addTribe: (t: string) => void;
-  removeTribe: (t: string) => void;
-  toggleBookmark: (id: string) => void;
-  addResource: (r: Omit<Resource, "id" | "bookmarked">) => void;
-  removeResource: (id: string) => void;
-  updateResource: (id: string, patch: Partial<Resource>) => void;
+  joinTribe: (t: string) => Promise<void>;
+  addTribe: (name: string, description?: string) => Promise<void>;
+  removeTribe: (name: string) => Promise<void>;
+  toggleBookmark: (id: string) => Promise<void>;
+  addResource: (r: Omit<Resource, "id" | "bookmarked" | "status"> & { status?: Resource["status"] }) => Promise<void>;
+  removeResource: (id: string) => Promise<void>;
+  updateResource: (id: string, patch: Partial<Resource>) => Promise<void>;
   setVerse: (text: string, ref: string) => void;
   addPrompt: (s: string) => void;
   removePrompt: (i: number) => void;
@@ -80,7 +96,7 @@ interface Ctx extends State {
   setBibleTranslation: (t: string) => void;
 }
 
-const STORAGE_KEY = "me.app.state.v1";
+const LOCAL_KEY = "me.app.local.v2";
 
 const phaseTasks = (phase: Phase, simple: boolean): Task[] => {
   const base: Record<Phase, string[]> = {
@@ -90,44 +106,46 @@ const phaseTasks = (phase: Phase, simple: boolean): Task[] => {
     "In-Transition": ["Morning prayer & scripture", "1 skill-building session", "2 outreach messages", "Body movement / walk", "Journal direction & gratitude"],
   };
   const simpleSet = ["Pause & pray (5 min)", "Drink water", "One small win"];
-  const list = simple ? simpleSet : base[phase];
-  return list.map((t, i) => ({ id: `t${i}`, text: t, done: false }));
+  return (simple ? simpleSet : base[phase]).map((t, i) => ({ id: `t${i}`, text: t, done: false }));
 };
+
+// ---- Daily-rotating content ----
+const VERSES = [
+  { text: "Be still, and know that I am God.", ref: "Psalm 46:10" },
+  { text: "Cast all your anxiety on Him because He cares for you.", ref: "1 Peter 5:7" },
+  { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
+  { text: "Trust in the Lord with all your heart.", ref: "Proverbs 3:5" },
+  { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
+  { text: "Weeping may endure for a night, but joy comes in the morning.", ref: "Psalm 30:5" },
+  { text: "Do not fear, for I am with you.", ref: "Isaiah 41:10" },
+];
+const dayIndex = () => Math.floor(Date.now() / 86400000);
+const dailyVerse = () => VERSES[dayIndex() % VERSES.length];
+
+const defaultUser: ProfileLike = { name: "Friend", email: "", phase: "Employee", detailA: "", detailB: "", focus: "Cognitive Renewal" };
 
 const defaultState: State = {
   theme: "light",
-  user: { name: "Friend", email: "", phase: "Employee", detailA: "Acme Inc", detailB: "Designer", focus: "Cognitive Renewal" },
+  user: defaultUser,
   mood: null,
-  moodHistory: [
-    { day: "Mon", mood: "Good" }, { day: "Tue", mood: "Neutral" }, { day: "Wed", mood: "Good" },
-    { day: "Thu", mood: "Excellent" }, { day: "Fri", mood: "Stressed" }, { day: "Sat", mood: "Good" }, { day: "Sun", mood: "Good" },
-  ],
+  moodHistory: [],
   tasks: phaseTasks("Employee", false),
   lifeHappens: false,
-  prayers: [
-    { id: "p1", text: "Wisdom for the week ahead", answered: false },
-    { id: "p2", text: "Healing for a dear friend", answered: true },
-  ],
+  prayers: [],
   notes: "",
   journal: "",
   water: 0,
   sleepHours: 7,
-  pillsFreeDays: 12,
+  pillsFreeDays: 0,
   savingsRatio: 20,
   income: 3000,
-  posts: [
-    { id: "po1", tribe: "Faith & Fitness", author: "Maya", text: "Ran 5k after morning devotion — clarity unlocked.", likes: 12, liked: false, comments: ["Inspiring!"] },
-    { id: "po2", tribe: "Ethical Young Leaders", author: "Daniel", text: "How do you say no without burning bridges?", likes: 7, liked: false, comments: [] },
-  ],
-  tribes: ["Holy Spirit Study Group", "Ethical Young Leaders", "Faith & Fitness", "Cognitive Renewal Circle"],
-  joinedTribes: ["Faith & Fitness"],
-  resources: [
-    { id: "r1", title: "Atomic Habits — Summary", type: "Books", summary: "Tiny changes, remarkable results. Identity-based habit loops.", bookmarked: false },
-    { id: "r2", title: "10-Min Stoic Reset", type: "Audio", summary: "Quick audio reset for an anxious afternoon.", bookmarked: true },
-    { id: "r3", title: "Make-Manage-Grow Framework", type: "Frameworks", summary: "Three-bucket money stewardship system.", bookmarked: false },
-    { id: "r4", title: "Evening Wind-Down Checklist", type: "Checklists", summary: "8 steps to a restorative night.", bookmarked: false },
-  ],
-  verse: { text: "Be still, and know that I am God.", ref: "Psalm 46:10" },
+  foodPlan: "🥣 Breakfast: oats + berries + nut butter\n🥗 Lunch: protein + leafy greens + whole grain\n🍲 Dinner: light protein + roasted veg\n🍎 Snack: fruit + handful of nuts",
+  exercisePlan: "Mon · 30-min walk\nWed · Strength 25 min\nFri · Mobility + stretch\nSat · Long outdoor activity",
+  posts: [],
+  tribes: [],
+  joinedTribes: [],
+  resources: [],
+  verse: dailyVerse(),
   promptList: [
     "What toxic cognitive patterns am I replacing with truth today?",
     "Which fear is loudest right now, and what does it want?",
@@ -139,69 +157,245 @@ const defaultState: State = {
   bibleTranslation: "kjv",
 };
 
+const dayName = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short" });
+
 const AppCtx = createContext<Ctx | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { user: authUser, profile } = useAuth();
   const [state, setState] = useState<State>(defaultState);
   const [hydrated, setHydrated] = useState(false);
 
-  // Load persisted state on the client after first render to avoid SSR/CSR mismatch.
+  // Hydrate local-only prefs
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setState((s) => ({ ...s, ...JSON.parse(raw) }));
+      const raw = localStorage.getItem(LOCAL_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        setState((s) => ({ ...s, ...saved, verse: dailyVerse() }));
+      }
     } catch {}
     setHydrated(true);
   }, []);
 
+  // Persist local-only prefs (theme, water, sleep, journal draft, etc.)
   useEffect(() => {
     if (!hydrated) return;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    const localOnly = {
+      theme: state.theme,
+      water: state.water,
+      sleepHours: state.sleepHours,
+      pillsFreeDays: state.pillsFreeDays,
+      savingsRatio: state.savingsRatio,
+      income: state.income,
+      foodPlan: state.foodPlan,
+      exercisePlan: state.exercisePlan,
+      notes: state.notes,
+      journal: state.journal,
+      lifeHappens: state.lifeHappens,
+      tasks: state.tasks,
+      promptList: state.promptList,
+      bibleBook: state.bibleBook,
+      bibleChapter: state.bibleChapter,
+      bibleTranslation: state.bibleTranslation,
+    };
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(localOnly)); } catch {}
     document.documentElement.classList.toggle("dark", state.theme === "dark");
   }, [state, hydrated]);
 
+  // Sync profile from auth
+  useEffect(() => {
+    if (profile) {
+      setState((s) => ({
+        ...s,
+        user: {
+          name: profile.username || s.user.name,
+          email: profile.email || "",
+          phase: (profile.life_phase as Phase) || s.user.phase,
+          detailA: profile.detail_a || "",
+          detailB: profile.detail_b || "",
+          focus: profile.focus || s.user.focus,
+        },
+        tasks: phaseTasks((profile.life_phase as Phase) || s.user.phase, s.lifeHappens),
+      }));
+    }
+  }, [profile]);
+
+  // Load remote data on user change
+  const reloadAll = async (uid: string) => {
+    const since = new Date(Date.now() - 7 * 86400000).toISOString();
+    const [moods, devs, ress, trbs, mbrs, pst] = await Promise.all([
+      supabase.from("mood_logs").select("*").eq("user_id", uid).gte("logged_at", since).order("logged_at"),
+      supabase.from("devotionals").select("*").eq("user_id", uid).neq("prayer_request", "").order("created_at", { ascending: false }),
+      supabase.from("resources").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+      supabase.from("tribes").select("*").order("created_at"),
+      supabase.from("tribe_members").select("tribe_id").eq("user_id", uid),
+      supabase.from("tribe_posts").select("*, tribes(name)").order("created_at", { ascending: false }).limit(100),
+    ]);
+
+    const moodHistory: MoodLog[] = (moods.data ?? []).map((m: any) => ({ day: dayName(new Date(m.logged_at)), mood: m.mood as Mood }));
+    const latestMood = moodHistory.length ? moodHistory[moodHistory.length - 1].mood : null;
+
+    const prayers: Prayer[] = (devs.data ?? []).map((d: any) => ({ id: d.id, text: d.prayer_request, answered: d.is_answered }));
+
+    const resources: Resource[] = (ress.data ?? []).map((r: any) => ({
+      id: r.id, title: r.title, type: r.type, category: r.category, status: r.status, summary: r.summary || "", bookmarked: r.bookmarked,
+    }));
+
+    const tribes = (trbs.data ?? []).map((t: any) => t.name);
+    const joinedIds = new Set((mbrs.data ?? []).map((m: any) => m.tribe_id));
+    const idToName: Record<string, string> = Object.fromEntries((trbs.data ?? []).map((t: any) => [t.id, t.name]));
+    const joinedTribes = (trbs.data ?? []).filter((t: any) => joinedIds.has(t.id)).map((t: any) => t.name);
+
+    const posts: Post[] = (pst.data ?? []).map((p: any) => ({
+      id: p.id, tribe: idToName[p.tribe_id] || p.tribes?.name || "—", author: "Member", text: p.text, likes: p.likes, liked: false, comments: [],
+    }));
+
+    setState((s) => ({ ...s, moodHistory, mood: latestMood, prayers, resources, tribes, joinedTribes, posts }));
+  };
+
+  useEffect(() => {
+    if (authUser) reloadAll(authUser.id);
+    else setState((s) => ({ ...s, moodHistory: [], prayers: [], resources: [], tribes: [], joinedTribes: [], posts: [] }));
+  }, [authUser?.id]);
+
   const update = (patch: Partial<State> | ((s: State) => Partial<State>)) =>
     setState((s) => ({ ...s, ...(typeof patch === "function" ? patch(s) : patch) }));
+
+  const uid = authUser?.id;
 
   const ctx: Ctx = useMemo(() => ({
     ...state,
     setTheme: (theme) => update({ theme }),
     toggleTheme: () => update((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
-    setUser: (u) => update((s) => ({ user: { ...s.user, ...u } })),
-    setPhase: (phase) => update((s) => ({ user: { ...s.user, phase }, tasks: phaseTasks(phase, s.lifeHappens) })),
-    setMood: (mood) => update((s) => ({
-      mood,
-      moodHistory: [...s.moodHistory.slice(-6), { day: new Date().toLocaleDateString(undefined, { weekday: "short" }), mood }],
-    })),
+    setUser: async (u) => {
+      update((s) => ({ user: { ...s.user, ...u } }));
+      if (uid) {
+        await supabase.from("profiles").update({
+          username: u.name, detail_a: u.detailA, detail_b: u.detailB, focus: u.focus,
+        }).eq("id", uid);
+      }
+    },
+    setPhase: async (phase) => {
+      update((s) => ({ user: { ...s.user, phase }, tasks: phaseTasks(phase, s.lifeHappens) }));
+      if (uid) await supabase.from("profiles").update({ life_phase: phase }).eq("id", uid);
+    },
+    setMood: async (mood) => {
+      const today = dayName(new Date());
+      update((s) => ({ mood, moodHistory: [...s.moodHistory.filter((_, i) => i !== s.moodHistory.length - 1 || s.moodHistory[s.moodHistory.length - 1].day !== today), { day: today, mood }].slice(-7) }));
+      if (uid) await supabase.from("mood_logs").insert({ user_id: uid, mood });
+    },
     addTask: (text) => update((s) => ({ tasks: [...s.tasks, { id: `t${Date.now()}`, text, done: false }] })),
     toggleTask: (id) => update((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)) })),
     removeTask: (id) => update((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
     setLifeHappens: (v) => update((s) => ({ lifeHappens: v, tasks: phaseTasks(s.user.phase, v) })),
-    addPrayer: (text) => update((s) => ({ prayers: [...s.prayers, { id: `p${Date.now()}`, text, answered: false }] })),
-    togglePrayer: (id) => update((s) => ({ prayers: s.prayers.map((p) => (p.id === id ? { ...p, answered: !p.answered } : p)) })),
+    addPrayer: async (text) => {
+      if (!uid) { update((s) => ({ prayers: [...s.prayers, { id: `p${Date.now()}`, text, answered: false }] })); return; }
+      const { data } = await supabase.from("devotionals").insert({ user_id: uid, prayer_request: text }).select().single();
+      if (data) update((s) => ({ prayers: [{ id: data.id, text: data.prayer_request || "", answered: data.is_answered }, ...s.prayers] }));
+    },
+    togglePrayer: async (id) => {
+      const p = state.prayers.find((x) => x.id === id);
+      if (!p) return;
+      update((s) => ({ prayers: s.prayers.map((x) => (x.id === id ? { ...x, answered: !x.answered } : x)) }));
+      if (uid) await supabase.from("devotionals").update({ is_answered: !p.answered }).eq("id", id);
+    },
     setNotes: (notes) => update({ notes }),
+    saveDevotionalNote: async () => {
+      if (!uid || !state.notes.trim()) return;
+      await supabase.from("devotionals").insert({ user_id: uid, note_content: state.notes });
+      update({ notes: "" });
+    },
     setJournal: (journal) => update({ journal }),
+    saveJournalEntry: async (category = "cognitive") => {
+      if (!uid || !state.journal.trim()) return;
+      await supabase.from("journal_entries").insert({ user_id: uid, content: state.journal, category });
+      update({ journal: "" });
+    },
     setWater: (water) => update({ water }),
     setSleep: (sleepHours) => update({ sleepHours }),
     logPillFreeDay: () => update((s) => ({ pillsFreeDays: s.pillsFreeDays + 1 })),
     setSavingsRatio: (savingsRatio) => update({ savingsRatio }),
     setIncome: (income) => update({ income }),
-    addPost: (tribe, text) => update((s) => ({ posts: [{ id: `po${Date.now()}`, tribe, author: s.user.name, text, likes: 0, liked: false, comments: [] }, ...s.posts] })),
-    likePost: (id) => update((s) => ({ posts: s.posts.map((p) => (p.id === id ? { ...p, liked: !p.liked, likes: p.likes + (p.liked ? -1 : 1) } : p)) })),
+    setFoodPlan: (foodPlan) => update({ foodPlan }),
+    setExercisePlan: (exercisePlan) => update({ exercisePlan }),
+    addPost: async (tribeName, text) => {
+      if (!uid) return;
+      const { data: tribe } = await supabase.from("tribes").select("id").eq("name", tribeName).maybeSingle();
+      if (!tribe) return;
+      const { data } = await supabase.from("tribe_posts").insert({ tribe_id: tribe.id, author_id: uid, text }).select().single();
+      if (data) update((s) => ({ posts: [{ id: data.id, tribe: tribeName, author: s.user.name, text, likes: 0, liked: false, comments: [] }, ...s.posts] }));
+    },
+    likePost: async (id) => {
+      const p = state.posts.find((x) => x.id === id);
+      if (!p) return;
+      const newLikes = p.likes + (p.liked ? -1 : 1);
+      update((s) => ({ posts: s.posts.map((x) => (x.id === id ? { ...x, liked: !x.liked, likes: newLikes } : x)) }));
+      await supabase.from("tribe_posts").update({ likes: newLikes }).eq("id", id);
+    },
     commentPost: (id, text) => update((s) => ({ posts: s.posts.map((p) => (p.id === id ? { ...p, comments: [...p.comments, text] } : p)) })),
-    joinTribe: (t) => update((s) => ({ joinedTribes: s.joinedTribes.includes(t) ? s.joinedTribes.filter((x) => x !== t) : [...s.joinedTribes, t] })),
-    addTribe: (t) => update((s) => (s.tribes.includes(t) ? {} : ({ tribes: [...s.tribes, t] }))),
-    removeTribe: (t) => update((s) => ({ tribes: s.tribes.filter((x) => x !== t), joinedTribes: s.joinedTribes.filter((x) => x !== t) })),
-    toggleBookmark: (id) => update((s) => ({ resources: s.resources.map((r) => (r.id === id ? { ...r, bookmarked: !r.bookmarked } : r)) })),
-    addResource: (r) => update((s) => ({ resources: [...s.resources, { ...r, id: `r${Date.now()}`, bookmarked: false }] })),
-    removeResource: (id) => update((s) => ({ resources: s.resources.filter((r) => r.id !== id) })),
-    updateResource: (id, patch) => update((s) => ({ resources: s.resources.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
+    joinTribe: async (name) => {
+      if (!uid) return;
+      const { data: tribe } = await supabase.from("tribes").select("id").eq("name", name).maybeSingle();
+      if (!tribe) return;
+      const joined = state.joinedTribes.includes(name);
+      if (joined) {
+        await supabase.from("tribe_members").delete().eq("tribe_id", tribe.id).eq("user_id", uid);
+      } else {
+        await supabase.from("tribe_members").insert({ tribe_id: tribe.id, user_id: uid });
+      }
+      update((s) => ({ joinedTribes: joined ? s.joinedTribes.filter((t) => t !== name) : [...s.joinedTribes, name] }));
+    },
+    addTribe: async (name, description = "") => {
+      if (!uid || state.tribes.includes(name)) return;
+      const { data } = await supabase.from("tribes").insert({ name, description, creator_id: uid }).select().single();
+      if (data) {
+        await supabase.from("tribe_members").insert({ tribe_id: data.id, user_id: uid });
+        update((s) => ({ tribes: [...s.tribes, name], joinedTribes: [...s.joinedTribes, name] }));
+      }
+    },
+    removeTribe: async (name) => {
+      const { data: tribe } = await supabase.from("tribes").select("id").eq("name", name).maybeSingle();
+      if (tribe) await supabase.from("tribes").delete().eq("id", tribe.id);
+      update((s) => ({ tribes: s.tribes.filter((t) => t !== name), joinedTribes: s.joinedTribes.filter((t) => t !== name) }));
+    },
+    toggleBookmark: async (id) => {
+      const r = state.resources.find((x) => x.id === id);
+      if (!r) return;
+      const next = !r.bookmarked;
+      update((s) => ({ resources: s.resources.map((x) => (x.id === id ? { ...x, bookmarked: next } : x)) }));
+      if (uid) await supabase.from("resources").update({ bookmarked: next }).eq("id", id);
+    },
+    addResource: async (r) => {
+      if (!uid) return;
+      const { data } = await supabase.from("resources").insert({
+        user_id: uid, title: r.title, summary: r.summary, type: r.type, category: r.category, status: r.status || "not-started",
+      }).select().single();
+      if (data) update((s) => ({ resources: [{ id: data.id, title: data.title, type: data.type, category: data.category, status: data.status, summary: data.summary || "", bookmarked: data.bookmarked }, ...s.resources] }));
+    },
+    removeResource: async (id) => {
+      update((s) => ({ resources: s.resources.filter((r) => r.id !== id) }));
+      if (uid) await supabase.from("resources").delete().eq("id", id);
+    },
+    updateResource: async (id, patch) => {
+      update((s) => ({ resources: s.resources.map((r) => (r.id === id ? { ...r, ...patch } : r)) }));
+      if (uid) {
+        const dbPatch: any = {};
+        if (patch.title !== undefined) dbPatch.title = patch.title;
+        if (patch.summary !== undefined) dbPatch.summary = patch.summary;
+        if (patch.type !== undefined) dbPatch.type = patch.type;
+        if (patch.category !== undefined) dbPatch.category = patch.category;
+        if (patch.status !== undefined) dbPatch.status = patch.status;
+        if (patch.bookmarked !== undefined) dbPatch.bookmarked = patch.bookmarked;
+        if (Object.keys(dbPatch).length) await supabase.from("resources").update(dbPatch).eq("id", id);
+      }
+    },
     setVerse: (text, ref) => update({ verse: { text, ref } }),
     addPrompt: (s2) => update((s) => ({ promptList: [...s.promptList, s2] })),
     removePrompt: (i) => update((s) => ({ promptList: s.promptList.filter((_, idx) => idx !== i) })),
     setBible: (bibleBook, bibleChapter) => update({ bibleBook, bibleChapter }),
     setBibleTranslation: (bibleTranslation) => update({ bibleTranslation }),
-  }), [state]);
+  }), [state, uid]);
 
   return <AppCtx.Provider value={ctx}>{children}</AppCtx.Provider>;
 }
