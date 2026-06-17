@@ -292,7 +292,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addPrayer: async (text) => {
       if (!uid) { update((s) => ({ prayers: [...s.prayers, { id: `p${Date.now()}`, text, answered: false }] })); return; }
       const { data } = await supabase.from("devotionals").insert({ user_id: uid, prayer_request: text }).select().single();
-      if (data) update((s) => ({ prayers: [{ id: data.id, text: data.prayer_request, answered: data.is_answered }, ...s.prayers] }));
+      if (data) update((s) => ({ prayers: [{ id: data.id, text: data.prayer_request || "", answered: data.is_answered }, ...s.prayers] }));
     },
     togglePrayer: async (id) => {
       const p = state.prayers.find((x) => x.id === id);
