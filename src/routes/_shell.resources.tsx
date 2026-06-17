@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, Bookmark } from "lucide-react";
-import { useApp } from "@/lib/app-context";
+import { Search, Bookmark, PlayCircle, CheckCircle2, Circle, Wallet } from "lucide-react";
+import { useApp, type Resource } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
 
