@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Smile, Meh, Frown, Star, Plus, X, Zap } from "lucide-react";
+import { Smile, Meh, Frown, Star, Plus, X, Zap, ArrowRight } from "lucide-react";
 import { useApp, type Mood } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
@@ -86,21 +86,21 @@ function Dashboard() {
           </form>
         </div>
 
-        <div className="lift rounded-3xl border border-border bg-card p-6">
+        <Link to="/faith" className="lift group rounded-3xl border border-border bg-card p-6 block">
           <div className="text-xs uppercase tracking-wider text-faith">Faith</div>
-          <div className="text-2xl font-black mt-1">Stay rooted.</div>
+          <div className="text-2xl font-black mt-1 flex items-center gap-2">Stay rooted. <ArrowRight className="h-5 w-5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-faith" /></div>
           <p className="text-sm text-muted-foreground mt-2">Open today's scripture and pray for one person.</p>
-        </div>
-        <div className="lift rounded-3xl border border-border bg-card p-6">
+        </Link>
+        <Link to="/mind" className="lift group rounded-3xl border border-border bg-card p-6 block">
           <div className="text-xs uppercase tracking-wider text-mind">Mind</div>
-          <div className="text-2xl font-black mt-1">Renew your thinking.</div>
+          <div className="text-2xl font-black mt-1 flex items-center gap-2">Renew your thinking. <ArrowRight className="h-5 w-5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-mind" /></div>
           <p className="text-sm text-muted-foreground mt-2">10 minutes of reflection beats 1 hour of scroll.</p>
-        </div>
-        <div className="lift rounded-3xl border border-border bg-card p-6">
+        </Link>
+        <Link to="/body" className="lift group rounded-3xl border border-border bg-card p-6 block">
           <div className="text-xs uppercase tracking-wider text-body">Body</div>
-          <div className="text-2xl font-black mt-1">Honor the temple.</div>
+          <div className="text-2xl font-black mt-1 flex items-center gap-2">Honor the temple. <ArrowRight className="h-5 w-5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-body" /></div>
           <p className="text-sm text-muted-foreground mt-2">Hydrate, move, sleep — the unsexy basics compound.</p>
-        </div>
+        </Link>
       </div>
     </div>
   );

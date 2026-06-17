@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Droplet, Moon, Pill, Plus, Minus, TrendingUp, MessageSquare, Heart } from "lucide-react";
+import { Droplet, Moon, Pill, Plus, Minus, TrendingUp, MessageSquare } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
@@ -189,5 +189,3 @@ function Pill2({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-// reused Heart icon import (kept to avoid unused warning if needed)
-export const _ = Heart;
