@@ -1,7 +1,9 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Home, Sparkles, Brain, HeartPulse, Users, BookOpen, Shield, Moon, Sun, Menu, X, LogOut } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { useApp, type Phase } from "@/lib/app-context";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -19,9 +21,18 @@ const MORE = [
 const PHASES: Phase[] = ["Student", "Employee", "Business Owner", "In-Transition"];
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const nav = useNavigate();
   const { theme, toggleTheme, user, setPhase } = useApp();
+  const { role, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const navItems = [...NAV, ...MORE.filter((m) => m.to !== "/admin" || role === "admin")];
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("Signed out");
+    nav({ to: "/", replace: true });
+  };
 
   return (
     <div className="min-h-screen flex w-full bg-background text-foreground">
@@ -36,18 +47,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="text-xs text-muted-foreground truncate">{user.detailB} · {user.phase}</div>
         </div>
         <nav className="flex flex-col gap-1">
-          {[...NAV, ...MORE].map((n) => {
+          {navItems.map((n) => {
             const active = pathname.startsWith(n.to);
             const Icon = n.icon;
             return (
-              <Link
-                key={n.to}
-                to={n.to}
-                className={cn(
-                  "press flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium",
-                  active ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-accent",
-                )}
-              >
+              <Link key={n.to} to={n.to}
+                className={cn("press flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium",
+                  active ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-accent")}>
                 <Icon className="h-4 w-4 shrink-0" />
                 <span className="truncate">{n.label}</span>
               </Link>
@@ -60,9 +66,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             <span>{theme === "dark" ? "Light" : "Dark"} mode</span>
           </button>
-          <Link to="/" className="press flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground">
+          <button onClick={handleLogout} className="press flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4" /> Logout
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -109,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button onClick={() => setDrawerOpen(false)} className="press p-2 rounded-lg border border-border"><X className="h-5 w-5" /></button>
           </div>
           <div className="flex flex-col gap-2 text-lg">
-            {MORE.map((n) => {
+            {MORE.filter((m) => m.to !== "/admin" || role === "admin").map((n) => {
               const Icon = n.icon;
               return (
                 <Link key={n.to} to={n.to} onClick={() => setDrawerOpen(false)} className="press flex items-center gap-3 p-4 rounded-2xl bg-card border border-border">
@@ -120,9 +126,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button onClick={() => { toggleTheme(); setDrawerOpen(false); }} className="press flex items-center gap-3 p-4 rounded-2xl bg-card border border-border">
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />} Toggle theme
             </button>
-            <Link to="/" onClick={() => setDrawerOpen(false)} className="press flex items-center gap-3 p-4 rounded-2xl bg-card border border-border text-destructive">
+            <button onClick={() => { setDrawerOpen(false); handleLogout(); }} className="press flex items-center gap-3 p-4 rounded-2xl bg-card border border-border text-destructive">
               <LogOut className="h-5 w-5" /> Logout
-            </Link>
+            </button>
           </div>
           <div className="mt-6">
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Life Phase (sandbox)</div>
