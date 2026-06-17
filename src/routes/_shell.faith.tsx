@@ -20,10 +20,9 @@ const PROMISES: Record<string, string[]> = {
   Peace: ["The peace of God will guard your hearts. — Phil 4:7", "Action: Sit still for 3 minutes before checking your phone."],
   Discouraged: ["The Lord is near to the brokenhearted. — Psalm 34:18", "Action: Speak one promise aloud over yourself."],
 };
-const BOOKS = ["Genesis", "Psalms", "Proverbs", "John", "Romans", "Philippians", "Revelation"];
 
 function Faith() {
-  const { verse, prayers, addPrayer, togglePrayer, notes, setNotes, bibleBook, bibleChapter, setBible } = useApp();
+  const { verse, prayers, addPrayer, togglePrayer, notes, setNotes } = useApp();
   const [feeling, setFeeling] = useState<string | null>(null);
   const [newPrayer, setNewPrayer] = useState("");
 
