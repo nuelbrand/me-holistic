@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, BookOpen, Check } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
+import { BibleReader } from "@/components/BibleReader";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_shell/faith")({
