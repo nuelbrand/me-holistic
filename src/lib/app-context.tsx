@@ -41,6 +41,7 @@ interface State {
   promptList: string[];
   bibleBook: string;
   bibleChapter: number;
+  bibleTranslation: string;
 }
 
 interface Ctx extends State {
