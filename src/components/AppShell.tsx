@@ -92,6 +92,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-2 px-4 h-14 border-b border-border bg-background/80 backdrop-blur">
           <Link to="/" className="text-2xl font-black">me<span className="text-primary">.</span></Link>
           <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-1 text-[10px] font-bold" title={`${stats.currentStreak}d streak · ${stats.totalXp} XP`}>
+              <Flame className="h-3 w-3 text-orange-500" /> {stats.currentStreak} · LV {stats.level}
+            </div>
             <PhaseSwitcher compact value={user.phase} onChange={setPhase} />
             <button onClick={toggleTheme} className="press p-2 rounded-lg border border-border">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
