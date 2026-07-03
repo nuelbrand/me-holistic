@@ -331,7 +331,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const { data: tribe } = await supabase.from("tribes").select("id").eq("name", tribeName).maybeSingle();
       if (!tribe) return;
       const { data } = await supabase.from("tribe_posts").insert({ tribe_id: tribe.id, author_id: uid, text }).select().single();
-      if (data) update((s) => ({ posts: [{ id: data.id, tribe: tribeName, author: s.user.name, text, likes: 0, liked: false, comments: [] }, ...s.posts] }));
+      if (data) {
+        update((s) => ({ posts: [{ id: data.id, tribe: tribeName, author: s.user.name, text, likes: 0, liked: false, comments: [] }, ...s.posts] }));
+        awardXp(uid, "post_created");
+      }
     },
     likePost: async (id) => {
       const p = state.posts.find((x) => x.id === id);
@@ -350,6 +353,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await supabase.from("tribe_members").delete().eq("tribe_id", tribe.id).eq("user_id", uid);
       } else {
         await supabase.from("tribe_members").insert({ tribe_id: tribe.id, user_id: uid });
+        awardXp(uid, "tribe_joined");
       }
       update((s) => ({ joinedTribes: joined ? s.joinedTribes.filter((t) => t !== name) : [...s.joinedTribes, name] }));
     },
@@ -385,6 +389,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (uid) await supabase.from("resources").delete().eq("id", id);
     },
     updateResource: async (id, patch) => {
+      const prev = state.resources.find((r) => r.id === id);
       update((s) => ({ resources: s.resources.map((r) => (r.id === id ? { ...r, ...patch } : r)) }));
       if (uid) {
         const dbPatch: any = {};
@@ -395,6 +400,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (patch.status !== undefined) dbPatch.status = patch.status;
         if (patch.bookmarked !== undefined) dbPatch.bookmarked = patch.bookmarked;
         if (Object.keys(dbPatch).length) await supabase.from("resources").update(dbPatch).eq("id", id);
+        if (patch.status === "completed" && prev?.status !== "completed") awardXp(uid, "resource_completed");
       }
     },
     setVerse: (text, ref) => update({ verse: { text, ref } }),
