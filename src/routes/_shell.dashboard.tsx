@@ -1,4 +1,5 @@
-import { createFileRoute, Link, useServerFn } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { Smile, Meh, Frown, Star, Plus, X, Zap, ArrowRight, RefreshCw, Sparkles, Flame, Trophy, Target, CalendarCheck } from "lucide-react";
 import { useApp, type Mood } from "@/lib/app-context";
