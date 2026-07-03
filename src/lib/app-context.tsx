@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type Phase } from "@/lib/auth";
+import { awardXp } from "@/lib/xp";
 
 export type { Phase };
 export type Mood = "Excellent" | "Good" | "Neutral" | "Stressed";
@@ -293,23 +294,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!uid) { update((s) => ({ prayers: [...s.prayers, { id: `p${Date.now()}`, text, answered: false }] })); return; }
       const { data } = await supabase.from("devotionals").insert({ user_id: uid, prayer_request: text }).select().single();
       if (data) update((s) => ({ prayers: [{ id: data.id, text: data.prayer_request || "", answered: data.is_answered }, ...s.prayers] }));
+      awardXp(uid, "prayer_added");
     },
     togglePrayer: async (id) => {
       const p = state.prayers.find((x) => x.id === id);
       if (!p) return;
       update((s) => ({ prayers: s.prayers.map((x) => (x.id === id ? { ...x, answered: !x.answered } : x)) }));
-      if (uid) await supabase.from("devotionals").update({ is_answered: !p.answered }).eq("id", id);
+      if (uid) {
+        await supabase.from("devotionals").update({ is_answered: !p.answered }).eq("id", id);
+        if (!p.answered) awardXp(uid, "prayer_answered");
+      }
     },
     setNotes: (notes) => update({ notes }),
     saveDevotionalNote: async () => {
       if (!uid || !state.notes.trim()) return;
       await supabase.from("devotionals").insert({ user_id: uid, note_content: state.notes });
+      awardXp(uid, "devotional_saved");
       update({ notes: "" });
     },
     setJournal: (journal) => update({ journal }),
     saveJournalEntry: async (category = "cognitive") => {
       if (!uid || !state.journal.trim()) return;
       await supabase.from("journal_entries").insert({ user_id: uid, content: state.journal, category });
+      awardXp(uid, "journal_saved");
       update({ journal: "" });
     },
     setWater: (water) => update({ water }),
