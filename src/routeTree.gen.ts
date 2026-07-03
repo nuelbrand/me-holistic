@@ -15,6 +15,7 @@ import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShellResourcesRouteImport } from './routes/_shell.resources'
 import { Route as ShellMindRouteImport } from './routes/_shell.mind'
+import { Route as ShellGoalsRouteImport } from './routes/_shell.goals'
 import { Route as ShellFaithRouteImport } from './routes/_shell.faith'
 import { Route as ShellDashboardRouteImport } from './routes/_shell.dashboard'
 import { Route as ShellCommunityRouteImport } from './routes/_shell.community'
@@ -48,6 +49,11 @@ const ShellResourcesRoute = ShellResourcesRouteImport.update({
 const ShellMindRoute = ShellMindRouteImport.update({
   id: '/mind',
   path: '/mind',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellGoalsRoute = ShellGoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
   getParentRoute: () => ShellRoute,
 } as any)
 const ShellFaithRoute = ShellFaithRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof ShellCommunityRoute
   '/dashboard': typeof ShellDashboardRoute
   '/faith': typeof ShellFaithRoute
+  '/goals': typeof ShellGoalsRoute
   '/mind': typeof ShellMindRoute
   '/resources': typeof ShellResourcesRoute
 }
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/community': typeof ShellCommunityRoute
   '/dashboard': typeof ShellDashboardRoute
   '/faith': typeof ShellFaithRoute
+  '/goals': typeof ShellGoalsRoute
   '/mind': typeof ShellMindRoute
   '/resources': typeof ShellResourcesRoute
 }
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/_shell/community': typeof ShellCommunityRoute
   '/_shell/dashboard': typeof ShellDashboardRoute
   '/_shell/faith': typeof ShellFaithRoute
+  '/_shell/goals': typeof ShellGoalsRoute
   '/_shell/mind': typeof ShellMindRoute
   '/_shell/resources': typeof ShellResourcesRoute
 }
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/dashboard'
     | '/faith'
+    | '/goals'
     | '/mind'
     | '/resources'
   fileRoutesByTo: FileRoutesByTo
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/dashboard'
     | '/faith'
+    | '/goals'
     | '/mind'
     | '/resources'
   id:
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_shell/community'
     | '/_shell/dashboard'
     | '/_shell/faith'
+    | '/_shell/goals'
     | '/_shell/mind'
     | '/_shell/resources'
   fileRoutesById: FileRoutesById
@@ -205,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellMindRouteImport
       parentRoute: typeof ShellRoute
     }
+    '/_shell/goals': {
+      id: '/_shell/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof ShellGoalsRouteImport
+      parentRoute: typeof ShellRoute
+    }
     '/_shell/faith': {
       id: '/_shell/faith'
       path: '/faith'
@@ -249,6 +268,7 @@ interface ShellRouteChildren {
   ShellCommunityRoute: typeof ShellCommunityRoute
   ShellDashboardRoute: typeof ShellDashboardRoute
   ShellFaithRoute: typeof ShellFaithRoute
+  ShellGoalsRoute: typeof ShellGoalsRoute
   ShellMindRoute: typeof ShellMindRoute
   ShellResourcesRoute: typeof ShellResourcesRoute
 }
@@ -259,6 +279,7 @@ const ShellRouteChildren: ShellRouteChildren = {
   ShellCommunityRoute: ShellCommunityRoute,
   ShellDashboardRoute: ShellDashboardRoute,
   ShellFaithRoute: ShellFaithRoute,
+  ShellGoalsRoute: ShellGoalsRoute,
   ShellMindRoute: ShellMindRoute,
   ShellResourcesRoute: ShellResourcesRoute,
 }

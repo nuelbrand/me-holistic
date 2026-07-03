@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppProvider } from "../lib/app-context";
 import { AuthProvider } from "../lib/auth";
+import { StatsProvider } from "../lib/stats-context";
 import { Toaster } from "sonner";
 
 function NotFoundComponent() {
@@ -82,10 +83,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppProvider>
-          <Outlet />
-          <Toaster richColors position="top-center" />
-        </AppProvider>
+        <StatsProvider>
+          <AppProvider>
+            <Outlet />
+            <Toaster richColors position="top-center" />
+          </AppProvider>
+        </StatsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
