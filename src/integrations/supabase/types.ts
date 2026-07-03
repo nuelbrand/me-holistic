@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_briefings: {
+        Row: {
+          briefing_date: string
+          created_at: string
+          focus_points: Json
+          greeting: string
+          id: string
+          mood_summary: string | null
+          user_id: string
+          verse_ref: string | null
+          verse_text: string | null
+        }
+        Insert: {
+          briefing_date: string
+          created_at?: string
+          focus_points?: Json
+          greeting: string
+          id?: string
+          mood_summary?: string | null
+          user_id: string
+          verse_ref?: string | null
+          verse_text?: string | null
+        }
+        Update: {
+          briefing_date?: string
+          created_at?: string
+          focus_points?: Json
+          greeting?: string
+          id?: string
+          mood_summary?: string | null
+          user_id?: string
+          verse_ref?: string | null
+          verse_text?: string | null
+        }
+        Relationships: []
+      }
       devotionals: {
         Row: {
           created_at: string
@@ -40,6 +76,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      goals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          order_index: number
+          parent_id: string | null
+          scope: Database["public"]["Enums"]["goal_scope"]
+          status: Database["public"]["Enums"]["goal_status"]
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          parent_id?: string | null
+          scope: Database["public"]["Enums"]["goal_scope"]
+          status?: Database["public"]["Enums"]["goal_status"]
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          parent_id?: string | null
+          scope?: Database["public"]["Enums"]["goal_scope"]
+          status?: Database["public"]["Enums"]["goal_status"]
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       journal_entries: {
         Row: {
@@ -264,11 +353,78 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          patterns: Json
+          suggestions: Json
+          summary: string | null
+          user_id: string
+          week_start: string
+          wins: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          patterns?: Json
+          suggestions?: Json
+          summary?: string | null
+          user_id: string
+          week_start: string
+          wins?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          patterns?: Json
+          suggestions?: Json
+          summary?: string | null
+          user_id?: string
+          week_start?: string
+          wins?: Json
+        }
+        Relationships: []
+      }
+      xp_events: {
+        Row: {
+          action: string
+          amount: number
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          amount?: number
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_user_stats: {
+        Args: { _user_id: string }
+        Returns: {
+          current_streak: number
+          level: number
+          longest_streak: number
+          total_xp: number
+          xp_today: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -283,6 +439,8 @@ export type Database = {
     }
     Enums: {
       app_role: "user" | "admin"
+      goal_scope: "yearly" | "quarterly" | "weekly" | "daily"
+      goal_status: "active" | "done" | "archived"
       life_phase: "Student" | "Employee" | "Business Owner" | "In-Transition"
       mood_label: "Excellent" | "Good" | "Neutral" | "Stressed"
       resource_category: "Faith" | "Mind" | "Body" | "General"
@@ -416,6 +574,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "admin"],
+      goal_scope: ["yearly", "quarterly", "weekly", "daily"],
+      goal_status: ["active", "done", "archived"],
       life_phase: ["Student", "Employee", "Business Owner", "In-Transition"],
       mood_label: ["Excellent", "Good", "Neutral", "Stressed"],
       resource_category: ["Faith", "Mind", "Body", "General"],
