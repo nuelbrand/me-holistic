@@ -1,9 +1,10 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Home, Sparkles, Brain, HeartPulse, Users, BookOpen, Shield, Moon, Sun, Menu, X, LogOut } from "lucide-react";
+import { Home, Sparkles, Brain, HeartPulse, Users, BookOpen, Shield, Moon, Sun, Menu, X, LogOut, Target, Flame, Trophy } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useApp, type Phase } from "@/lib/app-context";
 import { useAuth } from "@/lib/auth";
+import { useStats } from "@/lib/stats-context";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -14,6 +15,7 @@ const NAV = [
   { to: "/community", label: "Community", icon: Users },
 ];
 const MORE = [
+  { to: "/goals", label: "Goals", icon: Target },
   { to: "/resources", label: "Resources", icon: BookOpen },
   { to: "/admin", label: "Admin", icon: Shield },
 ];
@@ -24,6 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav = useNavigate();
   const { theme, toggleTheme, user, setPhase } = useApp();
   const { role, signOut } = useAuth();
+  const stats = useStats();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navItems = [...NAV, ...MORE.filter((m) => m.to !== "/admin" || role === "admin")];
@@ -42,9 +45,21 @@ export function AppShell({ children }: { children: ReactNode }) {
           me<span className="text-primary">.</span>
         </Link>
         <div className="mb-6 p-3 rounded-xl bg-muted/60">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Active</div>
-          <div className="font-semibold truncate">{user.name}</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Active</div>
+            <div className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-bold" title={`${stats.totalXp} XP total`}>
+              <Trophy className="h-3 w-3" /> LV {stats.level}
+            </div>
+          </div>
+          <div className="font-semibold truncate mt-1">{user.name}</div>
           <div className="text-xs text-muted-foreground truncate">{user.detailB} · {user.phase}</div>
+          <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-primary to-faith transition-all duration-500" style={{ width: `${stats.progressPct}%` }} />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3 text-orange-500" /> {stats.currentStreak}d streak</span>
+            <span>{stats.currentInLevel}/{stats.neededInLevel} XP</span>
+          </div>
         </div>
         <nav className="flex flex-col gap-1">
           {navItems.map((n) => {
@@ -77,6 +92,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="md:hidden sticky top-0 z-30 flex items-center justify-between gap-2 px-4 h-14 border-b border-border bg-background/80 backdrop-blur">
           <Link to="/" className="text-2xl font-black">me<span className="text-primary">.</span></Link>
           <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-1 text-[10px] font-bold" title={`${stats.currentStreak}d streak · ${stats.totalXp} XP`}>
+              <Flame className="h-3 w-3 text-orange-500" /> {stats.currentStreak} · LV {stats.level}
+            </div>
             <PhaseSwitcher compact value={user.phase} onChange={setPhase} />
             <button onClick={toggleTheme} className="press p-2 rounded-lg border border-border">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
