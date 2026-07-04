@@ -3,6 +3,10 @@ import { useState } from "react";
 import { Play, Pause, Shuffle, BookOpen, Headphones, Video, Save } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
+import { HabitsPanel } from "@/components/HabitsPanel";
+import { FocusTimer } from "@/components/FocusTimer";
+import { ThoughtRecord } from "@/components/ThoughtRecord";
+import { JournalCompanion } from "@/components/JournalCompanion";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_shell/mind")({
