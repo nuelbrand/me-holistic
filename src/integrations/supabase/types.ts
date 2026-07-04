@@ -55,6 +55,7 @@ export type Database = {
           created_at: string
           id: string
           is_answered: boolean
+          is_public: boolean
           note_content: string | null
           prayer_request: string | null
           user_id: string
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_answered?: boolean
+          is_public?: boolean
           note_content?: string | null
           prayer_request?: string | null
           user_id: string
@@ -71,8 +73,42 @@ export type Database = {
           created_at?: string
           id?: string
           is_answered?: boolean
+          is_public?: boolean
           note_content?: string | null
           prayer_request?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      focus_sessions: {
+        Row: {
+          actual_min: number
+          completed: boolean
+          ended_at: string | null
+          id: string
+          label: string
+          planned_min: number
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_min?: number
+          completed?: boolean
+          ended_at?: string | null
+          id?: string
+          label?: string
+          planned_min?: number
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_min?: number
+          completed?: boolean
+          ended_at?: string | null
+          id?: string
+          label?: string
+          planned_min?: number
+          started_at?: string
           user_id?: string
         }
         Relationships: []
@@ -130,6 +166,77 @@ export type Database = {
           },
         ]
       }
+      habit_logs: {
+        Row: {
+          created_at: string
+          habit_id: string
+          id: string
+          log_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          habit_id: string
+          id?: string
+          log_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          habit_id?: string
+          id?: string
+          log_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          archived: boolean
+          cadence: string
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          order_index: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          cadence?: string
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          order_index?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          cadence?: string
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       journal_entries: {
         Row: {
           category: string
@@ -150,6 +257,51 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      memory_verses: {
+        Row: {
+          created_at: string
+          ease: number
+          id: string
+          interval_days: number
+          next_review: string
+          reference: string
+          review_count: number
+          streak: number
+          text: string
+          translation: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ease?: number
+          id?: string
+          interval_days?: number
+          next_review?: string
+          reference: string
+          review_count?: number
+          streak?: number
+          text: string
+          translation?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ease?: number
+          id?: string
+          interval_days?: number
+          next_review?: string
+          reference?: string
+          review_count?: number
+          streak?: number
+          text?: string
+          translation?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -243,6 +395,48 @@ export type Database = {
           summary?: string | null
           title?: string
           type?: Database["public"]["Enums"]["resource_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      thought_records: {
+        Row: {
+          automatic_thought: string
+          balanced_thought: string | null
+          created_at: string
+          emotions: string[]
+          evidence_against: string | null
+          evidence_for: string | null
+          id: string
+          intensity_after: number | null
+          intensity_before: number
+          situation: string
+          user_id: string
+        }
+        Insert: {
+          automatic_thought: string
+          balanced_thought?: string | null
+          created_at?: string
+          emotions?: string[]
+          evidence_against?: string | null
+          evidence_for?: string | null
+          id?: string
+          intensity_after?: number | null
+          intensity_before?: number
+          situation: string
+          user_id: string
+        }
+        Update: {
+          automatic_thought?: string
+          balanced_thought?: string | null
+          created_at?: string
+          emotions?: string[]
+          evidence_against?: string | null
+          evidence_for?: string | null
+          id?: string
+          intensity_after?: number | null
+          intensity_before?: number
+          situation?: string
           user_id?: string
         }
         Relationships: []

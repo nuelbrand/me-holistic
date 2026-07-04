@@ -4,6 +4,7 @@ import { Plus, Check, BookOpen, Save } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { BibleReader } from "@/components/BibleReader";
+import { VerseMemorization } from "@/components/VerseMemorization";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_shell/faith")({
@@ -83,6 +84,8 @@ function Faith() {
             </div>
           )}
         </div>
+
+        <div className="lg:col-span-3"><VerseMemorization /></div>
 
         <div className="lg:col-span-3">
           <BibleReader />
