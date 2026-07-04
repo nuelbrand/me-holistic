@@ -208,3 +208,84 @@ export const seedGoalsFromSuggestions = createServerFn({ method: "POST" })
     const { data: inserted } = await supabase.from("goals").insert(rows).select();
     return inserted ?? [];
   });
+
+// ============ JOURNAL REFLECTION (AI companion) ============
+export const getJournalReflection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ content: z.string().min(1).max(6000) }).parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const [{ data: profile }, { data: recent }] = await Promise.all([
+      supabase.from("profiles").select("username, life_phase, focus").eq("id", userId).maybeSingle(),
+      supabase.from("journal_entries").select("content, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(4),
+    ]);
+
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const gateway = createLovableAiGatewayProvider(key);
+
+    const priorSnips = (recent ?? [])
+      .slice(1)
+      .map((e: any) => `- ${(e.content || "").slice(0, 160)}`)
+      .join("\n");
+
+    const { text } = await generateText({
+      model: gateway(MODEL),
+      messages: [
+        {
+          role: "system",
+          content: `You are a warm, faith-grounded journal companion inside "me.". A user just wrote a journal entry.
+Reply ONLY with strict JSON:
+{"encouragement": "1-2 sentences that meet them where they are (not saccharine)", "insight": "1 sentence highlighting a pattern, distortion, or truth you notice", "verse_text": "a short real Bible verse that fits", "verse_ref": "book chapter:verse", "next_step": "one gentle, specific action for the next 24h"}
+No markdown outside JSON. Never diagnose. Never moralize. Speak as a trusted friend + spiritual director.`,
+        },
+        {
+          role: "user",
+          content: `User: ${profile?.username || "friend"} · phase: ${profile?.life_phase || "Employee"} · focus: ${profile?.focus || "growth"}
+Just-written entry:
+"""
+${data.content}
+"""
+${priorSnips ? `Prior recent entries for context:\n${priorSnips}` : ""}`,
+        },
+      ],
+    });
+
+    return safeJson<{
+      encouragement: string;
+      insight: string;
+      verse_text: string;
+      verse_ref: string;
+      next_step: string;
+    }>(text, {
+      encouragement: "Thank you for showing up honestly today.",
+      insight: "Naming what you feel is already reshaping it.",
+      verse_text: "Cast all your anxiety on Him because He cares for you.",
+      verse_ref: "1 Peter 5:7",
+      next_step: "Take three slow breaths and write one thing you're grateful for.",
+    });
+  });
+
+// ============ SUGGEST MEMORY VERSE ============
+export const suggestMemoryVerse = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ theme: z.string().min(1).max(80) }).parse(i))
+  .handler(async ({ data }) => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const gateway = createLovableAiGatewayProvider(key);
+
+    const { text } = await generateText({
+      model: gateway(MODEL),
+      messages: [
+        { role: "system", content: `Return ONLY strict JSON: {"reference":"book chapter:verse","text":"the full verse in KJV"}. Pick a short, memorable verse (≤ 25 words) matching the theme. No markdown.` },
+        { role: "user", content: `Theme: ${data.theme}` },
+      ],
+    });
+
+    return safeJson<{ reference: string; text: string }>(text, {
+      reference: "Philippians 4:13",
+      text: "I can do all things through Christ which strengtheneth me.",
+    });
+  });
