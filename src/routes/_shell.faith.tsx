@@ -85,6 +85,8 @@ function Faith() {
           )}
         </div>
 
+        <div className="lg:col-span-3"><VerseMemorization /></div>
+
         <div className="lg:col-span-3">
           <BibleReader />
         </div>
