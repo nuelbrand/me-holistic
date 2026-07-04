@@ -73,10 +73,13 @@ function Mind() {
             </button>
           </div>
           <p key={prompt} className="mt-3 italic text-mind animate-[fade-in_0.3s_ease-out]">{prompt}</p>
-          <textarea value={journal} onChange={(e) => setJournal(e.target.value)} placeholder="Write without filter…" className="mt-3 w-full h-48 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
-          <button onClick={() => saveJournalEntry("cognitive")} className="press mt-3 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-mind text-mind-foreground text-xs font-semibold">
-            <Save className="h-3.5 w-3.5" /> Save entry
-          </button>
+          <textarea value={journal} onChange={(e) => setJournal(e.target.value)} placeholder="Write without filter…" className="mt-3 w-full h-40 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={() => saveJournalEntry("cognitive")} className="press mt-3 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-mind text-mind-foreground text-xs font-semibold">
+              <Save className="h-3.5 w-3.5" /> Save entry
+            </button>
+          </div>
+          <JournalCompanion content={journal} />
         </div>
 
         <div className="lift rounded-3xl border border-border bg-card p-6">
@@ -97,6 +100,11 @@ function Mind() {
             </div>
           )}
         </div>
+
+        <div className="lg:col-span-2"><HabitsPanel /></div>
+        <FocusTimer />
+
+        <div className="lg:col-span-3"><ThoughtRecord /></div>
 
         <div className="lift rounded-3xl border border-border bg-card p-6 lg:col-span-3">
           <div className="text-xs uppercase tracking-wider text-mind">Weekly mood</div>
