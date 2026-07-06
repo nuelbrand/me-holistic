@@ -54,7 +54,7 @@ export function WorkoutLogger() {
       .eq("user_id", user.id)
       .order("performed_at", { ascending: false })
       .limit(30);
-    setItems((data ?? []) as Workout[]);
+    setItems((data ?? []) as unknown as Workout[]);
     setLoading(false);
   };
   useEffect(() => { load(); }, [user?.id]);
