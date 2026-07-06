@@ -327,6 +327,45 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_logs: {
+        Row: {
+          calories: number | null
+          carbs_g: number | null
+          created_at: string
+          description: string
+          fat_g: number | null
+          id: string
+          log_date: string
+          meal: string
+          protein_g: number | null
+          user_id: string
+        }
+        Insert: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string
+          description: string
+          fat_g?: number | null
+          id?: string
+          log_date?: string
+          meal: string
+          protein_g?: number | null
+          user_id: string
+        }
+        Update: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string
+          description?: string
+          fat_g?: number | null
+          id?: string
+          log_date?: string
+          meal?: string
+          protein_g?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -396,6 +435,45 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["resource_type"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      sleep_logs: {
+        Row: {
+          bedtime: string | null
+          created_at: string
+          hours: number
+          id: string
+          log_date: string
+          notes: string | null
+          quality: number | null
+          source: string
+          user_id: string
+          wake_time: string | null
+        }
+        Insert: {
+          bedtime?: string | null
+          created_at?: string
+          hours: number
+          id?: string
+          log_date?: string
+          notes?: string | null
+          quality?: number | null
+          source?: string
+          user_id: string
+          wake_time?: string | null
+        }
+        Update: {
+          bedtime?: string | null
+          created_at?: string
+          hours?: number
+          id?: string
+          log_date?: string
+          notes?: string | null
+          quality?: number | null
+          source?: string
+          user_id?: string
+          wake_time?: string | null
         }
         Relationships: []
       }
@@ -547,6 +625,36 @@ export type Database = {
         }
         Relationships: []
       }
+      water_logs: {
+        Row: {
+          created_at: string
+          glasses: number
+          goal: number
+          id: string
+          log_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          glasses?: number
+          goal?: number
+          id?: string
+          log_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          glasses?: number
+          goal?: number
+          id?: string
+          log_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       weekly_reviews: {
         Row: {
           created_at: string
@@ -577,6 +685,134 @@ export type Database = {
           user_id?: string
           week_start?: string
           wins?: Json
+        }
+        Relationships: []
+      }
+      weight_logs: {
+        Row: {
+          body_fat_pct: number | null
+          created_at: string
+          id: string
+          log_date: string
+          notes: string | null
+          source: string
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          body_fat_pct?: number | null
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          source?: string
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          body_fat_pct?: number | null
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          source?: string
+          user_id?: string
+          weight_kg?: number
+        }
+        Relationships: []
+      }
+      workout_exercises: {
+        Row: {
+          created_at: string
+          exercise: string
+          id: string
+          notes: string | null
+          order_index: number
+          sets: Json
+          user_id: string
+          workout_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise: string
+          id?: string
+          notes?: string | null
+          order_index?: number
+          sets?: Json
+          user_id: string
+          workout_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise?: string
+          id?: string
+          notes?: string | null
+          order_index?: number
+          sets?: Json
+          user_id?: string
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_exercises_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workouts: {
+        Row: {
+          calories: number | null
+          created_at: string
+          distance_km: number | null
+          duration_min: number
+          external_id: string | null
+          id: string
+          intensity: number
+          kind: string
+          mood_after: number | null
+          notes: string | null
+          performed_at: string
+          source: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calories?: number | null
+          created_at?: string
+          distance_km?: number | null
+          duration_min?: number
+          external_id?: string | null
+          id?: string
+          intensity?: number
+          kind?: string
+          mood_after?: number | null
+          notes?: string | null
+          performed_at?: string
+          source?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calories?: number | null
+          created_at?: string
+          distance_km?: number | null
+          duration_min?: number
+          external_id?: string | null
+          id?: string
+          intensity?: number
+          kind?: string
+          mood_after?: number | null
+          notes?: string | null
+          performed_at?: string
+          source?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

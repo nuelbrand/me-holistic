@@ -1,9 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Droplet, Moon, Pill, Plus, Minus, TrendingUp, MessageSquare, BookOpen, ExternalLink } from "lucide-react";
+import { Pill, MessageSquare, BookOpen, TrendingUp } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { PageHeader } from "@/components/AppShell";
 import { cn } from "@/lib/utils";
+import { WorkoutLogger } from "@/components/body/WorkoutLogger";
+import { SleepTracker } from "@/components/body/SleepTracker";
+import { WeightTracker } from "@/components/body/WeightTracker";
+import { NutritionLog } from "@/components/body/NutritionLog";
+import { WaterTracker } from "@/components/body/WaterTracker";
+import { BodyCoach } from "@/components/body/BodyCoach";
+import { DataImport } from "@/components/body/DataImport";
 
 export const Route = createFileRoute("/_shell/body")({
   head: () => ({ meta: [{ title: "Body · me." }] }),
@@ -34,78 +41,49 @@ function Body() {
 }
 
 function Health() {
-  const { water, setWater, sleepHours, setSleep, pillsFreeDays, logPillFreeDay } = useApp();
+  const { pillsFreeDays, logPillFreeDay, resources } = useApp();
+  const reading = resources.filter((r) => r.category === "Body" && r.status === "in-progress");
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-      <Card title="Water intake" icon={Droplet}>
-        <div className="flex items-center gap-4 mt-3">
-          <button onClick={() => setWater(Math.max(0, water - 1))} className="press p-3 rounded-xl border border-border"><Minus className="h-4 w-4" /></button>
-          <div className="text-4xl font-black text-body">{water}<span className="text-base text-muted-foreground ml-1">/ 8</span></div>
-          <button onClick={() => setWater(water + 1)} className="press p-3 rounded-xl bg-body text-body-foreground"><Plus className="h-4 w-4" /></button>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <BodyCoach />
+      <WorkoutLogger />
+      <SleepTracker />
+      <WeightTracker />
+      <WaterTracker />
+      <NutritionLog />
+      <DataImport />
+
+      <div className="lift rounded-3xl border border-border bg-card p-6">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-body">
+          <Pill className="h-3.5 w-3.5" /> Zero pills logger
         </div>
-        <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
-          <div className="h-full bg-body transition-all duration-500" style={{ width: `${Math.min(100, (water / 8) * 100)}%` }} />
-        </div>
-      </Card>
-      <Card title="Sleep hygiene" icon={Moon}>
-        <input type="range" min={4} max={10} step={0.5} value={sleepHours} onChange={(e) => setSleep(+e.target.value)} className="w-full mt-4 accent-body" />
-        <div className="text-3xl font-black text-body mt-2">{sleepHours} hrs</div>
-        <p className="text-xs text-muted-foreground mt-1">Aim for 7–9 hours. Wind-down rituals compound.</p>
-      </Card>
-      <Card title="Zero pills logger" icon={Pill}>
         <div className="text-3xl font-black text-body mt-3">{pillsFreeDays} <span className="text-base text-muted-foreground">days</span></div>
         <p className="text-xs text-muted-foreground mt-1">Lifestyle medicine first.</p>
         <button onClick={logPillFreeDay} className="press mt-3 w-full py-2 rounded-xl bg-body text-body-foreground text-sm font-semibold">+ Log a day</button>
-      </Card>
-      <FoodCard />
-      <ExerciseCard />
-      <ReadingCard />
+      </div>
+
+      <div className="lift rounded-3xl border border-border bg-card p-6 md:col-span-2 lg:col-span-3">
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-wider text-body inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" /> Currently reading</div>
+          <Link to="/resources" className="text-xs text-muted-foreground hover:text-foreground">Library →</Link>
+        </div>
+        {reading.length === 0 ? (
+          <p className="text-sm text-muted-foreground mt-3">Mark a Body resource as <em>In Progress</em> in the library to surface it here.</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+            {reading.map((r) => (
+              <div key={r.id} className="p-3 rounded-xl bg-body/10 border border-body/30">
+                <div className="text-[10px] uppercase text-body">{r.type}</div>
+                <div className="font-bold text-sm">{r.title}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-function FoodCard() {
-  const { foodPlan, setFoodPlan } = useApp();
-  return (
-    <div className="lift rounded-3xl border border-border bg-card p-6 md:col-span-2">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-body">Food plan</div>
-      <textarea value={foodPlan} onChange={(e) => setFoodPlan(e.target.value)} className="mt-3 w-full h-32 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
-    </div>
-  );
-}
-function ExerciseCard() {
-  const { exercisePlan, setExercisePlan } = useApp();
-  return (
-    <div className="lift rounded-3xl border border-border bg-card p-6">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-body">Exercise plan</div>
-      <textarea value={exercisePlan} onChange={(e) => setExercisePlan(e.target.value)} className="mt-3 w-full h-32 bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
-    </div>
-  );
-}
-function ReadingCard() {
-  const { resources } = useApp();
-  const reading = resources.filter((r) => r.category === "Body" && r.status === "in-progress");
-  return (
-    <div className="lift rounded-3xl border border-border bg-card p-6 md:col-span-3">
-      <div className="flex items-center justify-between">
-        <div className="text-xs uppercase tracking-wider text-body inline-flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" /> Currently reading</div>
-        <Link to="/resources" className="text-xs text-muted-foreground hover:text-foreground">Library →</Link>
-      </div>
-      {reading.length === 0 ? (
-        <p className="text-sm text-muted-foreground mt-3">Mark a Body resource as <em>In Progress</em> in the library to surface it here.</p>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-          {reading.map((r) => (
-            <div key={r.id} className="p-3 rounded-xl bg-body/10 border border-body/30">
-              <div className="text-[10px] uppercase text-body">{r.type}</div>
-              <div className="font-bold text-sm">{r.title}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function Relationships() {
   const [reflection, setReflection] = useState("");

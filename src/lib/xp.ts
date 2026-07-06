@@ -17,7 +17,14 @@ export type XpAction =
   | "verse_added"
   | "verse_reviewed"
   | "verse_mastered"
-  | "thought_reframed";
+  | "thought_reframed"
+  | "workout_logged"
+  | "sleep_logged"
+  | "weight_logged"
+  | "nutrition_logged"
+  | "water_goal_hit"
+  | "data_imported";
+
 
 const AMOUNTS: Record<XpAction, number> = {
   mood_logged: 5,
@@ -37,6 +44,12 @@ const AMOUNTS: Record<XpAction, number> = {
   verse_reviewed: 12,
   verse_mastered: 50,
   thought_reframed: 25,
+  workout_logged: 20,
+  sleep_logged: 8,
+  weight_logged: 5,
+  nutrition_logged: 5,
+  water_goal_hit: 10,
+  data_imported: 15,
 };
 
 export async function awardXp(userId: string | undefined | null, action: XpAction) {
