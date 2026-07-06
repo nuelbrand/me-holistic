@@ -17,7 +17,14 @@ export type XpAction =
   | "verse_added"
   | "verse_reviewed"
   | "verse_mastered"
-  | "thought_reframed";
+  | "thought_reframed"
+  | "workout_logged"
+  | "sleep_logged"
+  | "weight_logged"
+  | "nutrition_logged"
+  | "water_goal_hit"
+  | "data_imported";
+
 
 const AMOUNTS: Record<XpAction, number> = {
   mood_logged: 5,
