@@ -609,6 +609,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_xp: { Args: { _action: string }; Returns: undefined }
       get_user_stats: {
         Args: { _user_id: string }
         Returns: {
