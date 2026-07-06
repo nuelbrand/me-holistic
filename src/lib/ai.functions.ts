@@ -289,3 +289,65 @@ export const suggestMemoryVerse = createServerFn({ method: "POST" })
       text: "I can do all things through Christ which strengtheneth me.",
     });
   });
+
+// ============ AI BODY COACH ============
+export const getBodyCoachAdvice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({}).parse(i ?? {}))
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const since = new Date(Date.now() - 14 * 86400000).toISOString();
+    const sinceDate = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
+
+    const [{ data: profile }, { data: workouts }, { data: sleep }, { data: weight }, { data: nutri }] = await Promise.all([
+      supabase.from("profiles").select("username, life_phase, focus").eq("id", userId).maybeSingle(),
+      supabase.from("workouts").select("kind, duration_min, intensity, distance_km, performed_at").eq("user_id", userId).gte("performed_at", since).order("performed_at", { ascending: false }).limit(20),
+      supabase.from("sleep_logs").select("log_date, hours, quality").eq("user_id", userId).gte("log_date", sinceDate).order("log_date", { ascending: false }),
+      supabase.from("weight_logs").select("log_date, weight_kg").eq("user_id", userId).gte("log_date", sinceDate).order("log_date", { ascending: false }),
+      supabase.from("nutrition_logs").select("meal, calories, protein_g, log_date").eq("user_id", userId).gte("log_date", sinceDate).order("log_date", { ascending: false }).limit(30),
+    ]);
+
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const gateway = createLovableAiGatewayProvider(key);
+
+    const workoutSum = (workouts ?? []).map((w: any) => `${w.kind} ${w.duration_min}m i${w.intensity}${w.distance_km ? ` ${w.distance_km}km` : ""}`).join(" | ") || "no workouts";
+    const sleepAvg = (sleep ?? []).length ? ((sleep ?? []).reduce((s: number, r: any) => s + Number(r.hours), 0) / sleep!.length).toFixed(1) : "n/a";
+    const weightTrend = (weight ?? []).length > 1
+      ? `${Number(weight![weight!.length - 1].weight_kg).toFixed(1)}kg → ${Number(weight![0].weight_kg).toFixed(1)}kg over ${weight!.length} logs`
+      : (weight ?? []).length === 1 ? `${weight![0].weight_kg}kg (one log)` : "no weight logs";
+    const proteinAvg = (nutri ?? []).length ? Math.round((nutri ?? []).reduce((s: number, n: any) => s + (n.protein_g ?? 0), 0) / nutri!.length) : 0;
+
+    const { text } = await generateText({
+      model: gateway(MODEL),
+      messages: [
+        {
+          role: "system",
+          content: `You are an evidence-based fitness/recovery coach inside "me." — a holistic self-stewardship app. You are NOT a doctor. Respond ONLY with strict JSON:
+{"headline":"1 punchy sentence assessing today's readiness","recovery":"1-2 sentences on recovery status","workout_today":"1-2 sentences of specific workout guidance for today (skip/light/moderate/hard, exercise type)","nutrition_tip":"1 concrete nutrition action","sleep_tip":"1 concrete sleep action","encouragement":"1 warm, faith-informed sentence"}
+Max ~25 words per field. Never markdown. Speak directly to the user.`,
+        },
+        {
+          role: "user",
+          content: `User: ${profile?.username || "friend"} · phase: ${profile?.life_phase || "Employee"} · focus: ${profile?.focus || "wellbeing"}
+Last 14 days:
+- Workouts (${(workouts ?? []).length}): ${workoutSum}
+- Sleep avg: ${sleepAvg}h across ${(sleep ?? []).length} logs
+- Weight: ${weightTrend}
+- Nutrition logs: ${(nutri ?? []).length}, avg protein/entry: ${proteinAvg}g`,
+        },
+      ],
+    });
+
+    return safeJson<{
+      headline: string; recovery: string; workout_today: string; nutrition_tip: string; sleep_tip: string; encouragement: string;
+    }>(text, {
+      headline: "Steady day — build the base.",
+      recovery: "Not enough data yet. Log a few days to unlock deeper insight.",
+      workout_today: "30–40 min moderate movement — walk, easy run, or a full-body strength circuit.",
+      nutrition_tip: "Anchor each meal with 25–35g of protein.",
+      sleep_tip: "Screens off 30 min before bed; aim for 7.5h in bed.",
+      encouragement: "Your body is fearfully and wonderfully made — honor it with consistency.",
+    });
+  });
+
