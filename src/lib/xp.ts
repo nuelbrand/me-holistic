@@ -42,11 +42,14 @@ const AMOUNTS: Record<XpAction, number> = {
 export async function awardXp(userId: string | undefined | null, action: XpAction) {
   if (!userId) return;
   try {
-    await supabase.from("xp_events").insert({ user_id: userId, action, amount: AMOUNTS[action] });
+    await supabase.rpc("award_xp", { _action: action });
   } catch {
     // silent — XP is a bonus, never block user action
   }
 }
+
+// Retained for UI display of expected reward amounts
+export const XP_AMOUNTS = AMOUNTS;
 
 export function levelFromXp(total: number) {
   return Math.max(1, Math.floor(Math.sqrt(total / 50)) + 1);
