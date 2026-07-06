@@ -90,7 +90,7 @@ export function WorkoutLogger() {
           sets: e.sets,
           notes: e.notes ?? null,
         }));
-      if (rows.length) await supabase.from("workout_exercises").insert(rows);
+      if (rows.length) await supabase.from("workout_exercises").insert(rows as unknown as any);
     }
     await awardXp(user.id, "workout_logged");
     stats.refresh();
