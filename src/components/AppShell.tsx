@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Home, Sparkles, Brain, HeartPulse, Users, BookOpen, Shield, Moon, Sun, Menu, X, LogOut, Target, Flame, Trophy } from "lucide-react";
+import { Home, Sparkles, Brain, HeartPulse, Users, BookOpen, Shield, Moon, Sun, Menu, X, LogOut, Target, Flame, Trophy, MessageCircle, Handshake } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useApp, type Phase } from "@/lib/app-context";
@@ -12,13 +12,17 @@ const NAV = [
   { to: "/faith", label: "Faith", icon: Sparkles },
   { to: "/mind", label: "Mind", icon: Brain },
   { to: "/body", label: "Body", icon: HeartPulse },
-  { to: "/community", label: "Community", icon: Users },
+  { to: "/coach", label: "Coach", icon: MessageCircle },
 ];
 const MORE = [
+  { to: "/community", label: "Community", icon: Users },
+  { to: "/challenges", label: "Challenges", icon: Trophy },
+  { to: "/partners", label: "Partners", icon: Handshake },
   { to: "/goals", label: "Goals", icon: Target },
   { to: "/resources", label: "Resources", icon: BookOpen },
   { to: "/admin", label: "Admin", icon: Shield },
 ];
+
 
 const PHASES: Phase[] = ["Student", "Employee", "Business Owner", "In-Transition"];
 

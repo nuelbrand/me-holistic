@@ -13,12 +13,16 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ShellRouteImport } from './routes/_shell'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ShellResourcesRouteImport } from './routes/_shell.resources'
+import { Route as ShellPartnersRouteImport } from './routes/_shell.partners'
 import { Route as ShellMindRouteImport } from './routes/_shell.mind'
 import { Route as ShellGoalsRouteImport } from './routes/_shell.goals'
 import { Route as ShellFaithRouteImport } from './routes/_shell.faith'
 import { Route as ShellDashboardRouteImport } from './routes/_shell.dashboard'
 import { Route as ShellCommunityRouteImport } from './routes/_shell.community'
+import { Route as ShellCoachRouteImport } from './routes/_shell.coach'
+import { Route as ShellChallengesRouteImport } from './routes/_shell.challenges'
 import { Route as ShellBodyRouteImport } from './routes/_shell.body'
 import { Route as ShellAdminRouteImport } from './routes/_shell.admin'
 
@@ -41,9 +45,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShellResourcesRoute = ShellResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellPartnersRoute = ShellPartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
   getParentRoute: () => ShellRoute,
 } as any)
 const ShellMindRoute = ShellMindRouteImport.update({
@@ -71,6 +85,16 @@ const ShellCommunityRoute = ShellCommunityRouteImport.update({
   path: '/community',
   getParentRoute: () => ShellRoute,
 } as any)
+const ShellCoachRoute = ShellCoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellChallengesRoute = ShellChallengesRouteImport.update({
+  id: '/challenges',
+  path: '/challenges',
+  getParentRoute: () => ShellRoute,
+} as any)
 const ShellBodyRoute = ShellBodyRouteImport.update({
   id: '/body',
   path: '/body',
@@ -88,12 +112,16 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/admin': typeof ShellAdminRoute
   '/body': typeof ShellBodyRoute
+  '/challenges': typeof ShellChallengesRoute
+  '/coach': typeof ShellCoachRoute
   '/community': typeof ShellCommunityRoute
   '/dashboard': typeof ShellDashboardRoute
   '/faith': typeof ShellFaithRoute
   '/goals': typeof ShellGoalsRoute
   '/mind': typeof ShellMindRoute
+  '/partners': typeof ShellPartnersRoute
   '/resources': typeof ShellResourcesRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,12 +129,16 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/admin': typeof ShellAdminRoute
   '/body': typeof ShellBodyRoute
+  '/challenges': typeof ShellChallengesRoute
+  '/coach': typeof ShellCoachRoute
   '/community': typeof ShellCommunityRoute
   '/dashboard': typeof ShellDashboardRoute
   '/faith': typeof ShellFaithRoute
   '/goals': typeof ShellGoalsRoute
   '/mind': typeof ShellMindRoute
+  '/partners': typeof ShellPartnersRoute
   '/resources': typeof ShellResourcesRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,12 +148,16 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_shell/admin': typeof ShellAdminRoute
   '/_shell/body': typeof ShellBodyRoute
+  '/_shell/challenges': typeof ShellChallengesRoute
+  '/_shell/coach': typeof ShellCoachRoute
   '/_shell/community': typeof ShellCommunityRoute
   '/_shell/dashboard': typeof ShellDashboardRoute
   '/_shell/faith': typeof ShellFaithRoute
   '/_shell/goals': typeof ShellGoalsRoute
   '/_shell/mind': typeof ShellMindRoute
+  '/_shell/partners': typeof ShellPartnersRoute
   '/_shell/resources': typeof ShellResourcesRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,12 +167,16 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/body'
+    | '/challenges'
+    | '/coach'
     | '/community'
     | '/dashboard'
     | '/faith'
     | '/goals'
     | '/mind'
+    | '/partners'
     | '/resources'
+    | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,12 +184,16 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/body'
+    | '/challenges'
+    | '/coach'
     | '/community'
     | '/dashboard'
     | '/faith'
     | '/goals'
     | '/mind'
+    | '/partners'
     | '/resources'
+    | '/api/chat'
   id:
     | '__root__'
     | '/'
@@ -158,12 +202,16 @@ export interface FileRouteTypes {
     | '/register'
     | '/_shell/admin'
     | '/_shell/body'
+    | '/_shell/challenges'
+    | '/_shell/coach'
     | '/_shell/community'
     | '/_shell/dashboard'
     | '/_shell/faith'
     | '/_shell/goals'
     | '/_shell/mind'
+    | '/_shell/partners'
     | '/_shell/resources'
+    | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +219,7 @@ export interface RootRouteChildren {
   ShellRoute: typeof ShellRouteWithChildren
   AuthRoute: typeof AuthRoute
   RegisterRoute: typeof RegisterRoute
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -203,11 +252,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_shell/resources': {
       id: '/_shell/resources'
       path: '/resources'
       fullPath: '/resources'
       preLoaderRoute: typeof ShellResourcesRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/partners': {
+      id: '/_shell/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof ShellPartnersRouteImport
       parentRoute: typeof ShellRoute
     }
     '/_shell/mind': {
@@ -245,6 +308,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShellCommunityRouteImport
       parentRoute: typeof ShellRoute
     }
+    '/_shell/coach': {
+      id: '/_shell/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof ShellCoachRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/challenges': {
+      id: '/_shell/challenges'
+      path: '/challenges'
+      fullPath: '/challenges'
+      preLoaderRoute: typeof ShellChallengesRouteImport
+      parentRoute: typeof ShellRoute
+    }
     '/_shell/body': {
       id: '/_shell/body'
       path: '/body'
@@ -265,22 +342,28 @@ declare module '@tanstack/react-router' {
 interface ShellRouteChildren {
   ShellAdminRoute: typeof ShellAdminRoute
   ShellBodyRoute: typeof ShellBodyRoute
+  ShellChallengesRoute: typeof ShellChallengesRoute
+  ShellCoachRoute: typeof ShellCoachRoute
   ShellCommunityRoute: typeof ShellCommunityRoute
   ShellDashboardRoute: typeof ShellDashboardRoute
   ShellFaithRoute: typeof ShellFaithRoute
   ShellGoalsRoute: typeof ShellGoalsRoute
   ShellMindRoute: typeof ShellMindRoute
+  ShellPartnersRoute: typeof ShellPartnersRoute
   ShellResourcesRoute: typeof ShellResourcesRoute
 }
 
 const ShellRouteChildren: ShellRouteChildren = {
   ShellAdminRoute: ShellAdminRoute,
   ShellBodyRoute: ShellBodyRoute,
+  ShellChallengesRoute: ShellChallengesRoute,
+  ShellCoachRoute: ShellCoachRoute,
   ShellCommunityRoute: ShellCommunityRoute,
   ShellDashboardRoute: ShellDashboardRoute,
   ShellFaithRoute: ShellFaithRoute,
   ShellGoalsRoute: ShellGoalsRoute,
   ShellMindRoute: ShellMindRoute,
+  ShellPartnersRoute: ShellPartnersRoute,
   ShellResourcesRoute: ShellResourcesRoute,
 }
 
@@ -291,6 +374,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShellRoute: ShellRouteWithChildren,
   AuthRoute: AuthRoute,
   RegisterRoute: RegisterRoute,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
