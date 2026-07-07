@@ -225,13 +225,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load remote data on user change
   const reloadAll = async (uid: string) => {
     const since = new Date(Date.now() - 7 * 86400000).toISOString();
-    const [moods, devs, ress, trbs, mbrs, pst] = await Promise.all([
+    const [moods, devs, ress, trbs, mbrs, pst, lks] = await Promise.all([
       supabase.from("mood_logs").select("*").eq("user_id", uid).gte("logged_at", since).order("logged_at"),
       supabase.from("devotionals").select("*").eq("user_id", uid).neq("prayer_request", "").order("created_at", { ascending: false }),
       supabase.from("resources").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       supabase.from("tribes").select("*").order("created_at"),
       supabase.from("tribe_members").select("tribe_id").eq("user_id", uid),
       supabase.from("tribe_posts").select("*, tribes(name)").order("created_at", { ascending: false }).limit(100),
+      supabase.from("tribe_post_likes").select("post_id, user_id"),
     ]);
 
     const moodHistory: MoodLog[] = (moods.data ?? []).map((m: any) => ({ day: dayName(new Date(m.logged_at)), mood: m.mood as Mood }));
@@ -248,9 +249,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const idToName: Record<string, string> = Object.fromEntries((trbs.data ?? []).map((t: any) => [t.id, t.name]));
     const joinedTribes = (trbs.data ?? []).filter((t: any) => joinedIds.has(t.id)).map((t: any) => t.name);
 
+    const likeCounts = new Map<string, number>();
+    const likedByMe = new Set<string>();
+    for (const l of (lks.data ?? []) as { post_id: string; user_id: string }[]) {
+      likeCounts.set(l.post_id, (likeCounts.get(l.post_id) ?? 0) + 1);
+      if (l.user_id === uid) likedByMe.add(l.post_id);
+    }
+
     const posts: Post[] = (pst.data ?? []).map((p: any) => ({
-      id: p.id, tribe: idToName[p.tribe_id] || p.tribes?.name || "—", author: "Member", text: p.text, likes: p.likes, liked: false, comments: [],
+      id: p.id, tribe: idToName[p.tribe_id] || p.tribes?.name || "—", author: "Member", text: p.text,
+      likes: likeCounts.get(p.id) ?? 0, liked: likedByMe.has(p.id), comments: [],
     }));
+
 
     setState((s) => ({ ...s, moodHistory, mood: latestMood, prayers, resources, tribes, joinedTribes, posts }));
   };
@@ -338,11 +348,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     likePost: async (id) => {
       const p = state.posts.find((x) => x.id === id);
-      if (!p) return;
-      const newLikes = p.likes + (p.liked ? -1 : 1);
-      update((s) => ({ posts: s.posts.map((x) => (x.id === id ? { ...x, liked: !x.liked, likes: newLikes } : x)) }));
-      await supabase.from("tribe_posts").update({ likes: newLikes }).eq("id", id);
+      if (!p || !uid) return;
+      const willLike = !p.liked;
+      const newLikes = p.likes + (willLike ? 1 : -1);
+      update((s) => ({ posts: s.posts.map((x) => (x.id === id ? { ...x, liked: willLike, likes: newLikes } : x)) }));
+      if (willLike) {
+        await supabase.from("tribe_post_likes").insert({ post_id: id, user_id: uid });
+      } else {
+        await supabase.from("tribe_post_likes").delete().eq("post_id", id).eq("user_id", uid);
+      }
     },
+
     commentPost: (id, text) => update((s) => ({ posts: s.posts.map((p) => (p.id === id ? { ...p, comments: [...p.comments, text] } : p)) })),
     joinTribe: async (name) => {
       if (!uid) return;

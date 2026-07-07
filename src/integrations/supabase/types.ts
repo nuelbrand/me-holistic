@@ -545,6 +545,32 @@ export type Database = {
           },
         ]
       }
+      tribe_post_likes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tribe_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "tribe_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tribe_posts: {
         Row: {
           author_id: string
