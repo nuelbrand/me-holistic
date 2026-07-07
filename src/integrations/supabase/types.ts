@@ -14,6 +14,127 @@ export type Database = {
   }
   public: {
     Tables: {
+      accountability_pairs: {
+        Row: {
+          created_at: string
+          id: string
+          partner_id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          partner_id: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          partner_id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      challenge_progress: {
+        Row: {
+          challenge_id: string
+          created_at: string
+          log_date: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string
+          log_date?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string
+          log_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_days: number
+          id: string
+          starts_on: string
+          title: string
+          tribe_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_days?: number
+          id?: string
+          starts_on?: string
+          title: string
+          tribe_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_days?: number
+          id?: string
+          starts_on?: string
+          title?: string
+          tribe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenges_tribe_id_fkey"
+            columns: ["tribe_id"]
+            isOneToOne: false
+            referencedRelation: "tribes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_briefings: {
         Row: {
           briefing_date: string
@@ -365,6 +486,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      post_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "tribe_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_replies: {
+        Row: {
+          author_id: string
+          created_at: string
+          id: string
+          parent_reply_id: string | null
+          post_id: string
+          text: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          id?: string
+          parent_reply_id?: string | null
+          post_id: string
+          text: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          id?: string
+          parent_reply_id?: string | null
+          post_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "post_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_replies_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "tribe_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
