@@ -52,8 +52,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       toast.success("Exported your data");
     } catch { toast.error("Export failed"); }
   };
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const navItems = [...NAV, ...MORE.filter((m) => m.to !== "/admin" || role === "admin")];
 
   const handleLogout = async () => {
     await signOut();
@@ -101,9 +99,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="mt-auto flex flex-col gap-2">
           <PhaseSwitcher value={user.phase} onChange={setPhase} />
-          <button onClick={toggleTheme} className="press flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-sm">
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            <span>{theme === "dark" ? "Light" : "Dark"} mode</span>
+          <button onClick={() => setThemeOpen((v) => !v)} className="press flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-sm">
+            <Palette className="h-4 w-4" /> Appearance
+          </button>
+          {themeOpen && <div className="p-2 rounded-xl border border-border bg-background"><ThemeSwitcher /></div>}
+          <button onClick={handleExport} className="press flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-sm">
+            <Download className="h-4 w-4" /> Export data
           </button>
           <button onClick={handleLogout} className="press flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4" /> Logout
@@ -120,8 +121,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Flame className="h-3 w-3 text-orange-500" /> {stats.currentStreak} · LV {stats.level}
             </div>
             <PhaseSwitcher compact value={user.phase} onChange={setPhase} />
-            <button onClick={toggleTheme} className="press p-2 rounded-lg border border-border">
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <button onClick={() => setThemeOpen((v) => !v)} className="press p-2 rounded-lg border border-border">
+              <Palette className="h-4 w-4" />
             </button>
           </div>
         </header>
@@ -165,8 +166,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
-            <button onClick={() => { toggleTheme(); setDrawerOpen(false); }} className="press flex items-center gap-3 p-4 rounded-2xl bg-card border border-border">
-              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />} Toggle theme
+            <div className="p-4 rounded-2xl bg-card border border-border"><ThemeSwitcher /></div>
+            <button onClick={() => { setDrawerOpen(false); handleExport(); }} className="press flex items-center gap-3 p-4 rounded-2xl bg-card border border-border">
+              <Download className="h-5 w-5" /> Export my data
             </button>
             <button onClick={() => { setDrawerOpen(false); handleLogout(); }} className="press flex items-center gap-3 p-4 rounded-2xl bg-card border border-border text-destructive">
               <LogOut className="h-5 w-5" /> Logout
