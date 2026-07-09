@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Send, Sparkles, RotateCcw } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
+import { VoiceButton } from "@/components/VoiceButton";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -172,6 +173,7 @@ function CoachPage() {
           >
             <RotateCcw className="h-4 w-4" />
           </button>
+          <VoiceButton onTranscript={(t, final) => setInput((v) => (final ? (v ? v + " " : "") + t : v))} />
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}

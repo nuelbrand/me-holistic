@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppProvider } from "../lib/app-context";
 import { AuthProvider } from "../lib/auth";
 import { StatsProvider } from "../lib/stats-context";
+import { ThemeProvider } from "../lib/theme";
 import { Toaster } from "sonner";
 
 function NotFoundComponent() {
@@ -60,8 +61,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e8f1df76-2f08-423a-88e8-e82d26841da8/id-preview-6537d229--a84fca76-a1cb-4a59-a39d-fc8de384e614.lovable.app-1781706228440.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e8f1df76-2f08-423a-88e8-e82d26841da8/id-preview-6537d229--a84fca76-a1cb-4a59-a39d-fc8de384e614.lovable.app-1781706228440.png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#0e1428" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "me." },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -84,10 +94,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <StatsProvider>
-          <AppProvider>
-            <Outlet />
-            <Toaster richColors position="top-center" />
-          </AppProvider>
+          <ThemeProvider>
+            <AppProvider>
+              <Outlet />
+              <Toaster richColors position="top-center" />
+            </AppProvider>
+          </ThemeProvider>
         </StatsProvider>
       </AuthProvider>
     </QueryClientProvider>

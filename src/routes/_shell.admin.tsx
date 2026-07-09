@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Edit3, Shield } from "lucide-react";
+import { Plus, Trash2, Edit3, Shield, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { useApp, type Resource } from "@/lib/app-context";
 import { useAuth } from "@/lib/auth";
 import { PageHeader } from "@/components/AppShell";
+import { getAdminStats } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_shell/admin")({
@@ -12,12 +13,12 @@ export const Route = createFileRoute("/_shell/admin")({
   component: Admin,
 });
 
-const TABS = ["Content", "Library", "Tribes", "Users"] as const;
+const TABS = ["Analytics", "Content", "Library", "Tribes", "Users"] as const;
 
 function Admin() {
   const nav = useNavigate();
   const { role, loading } = useAuth();
-  const [tab, setTab] = useState<typeof TABS[number]>("Content");
+  const [tab, setTab] = useState<typeof TABS[number]>("Analytics");
 
   useEffect(() => {
     if (!loading && role !== "admin") {
@@ -44,10 +45,63 @@ function Admin() {
         ))}
       </div>
       <div key={tab} className="animate-[fade-in_0.3s_ease-out]">
+        {tab === "Analytics" && <Analytics />}
         {tab === "Content" && <Content />}
         {tab === "Library" && <Library />}
         {tab === "Tribes" && <Tribes />}
         {tab === "Users" && <Users />}
+      </div>
+    </div>
+  );
+}
+
+function Analytics() {
+  const [data, setData] = useState<Awaited<ReturnType<typeof getAdminStats>> | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    getAdminStats().then(setData).catch((e) => setErr(e?.message || "Failed to load"));
+  }, []);
+  if (err) return <div className="text-sm text-destructive">{err}</div>;
+  if (!data) return <div className="text-sm text-muted-foreground">Loading analytics…</div>;
+  const cards = [
+    { label: "Total users", val: data.total_users },
+    { label: "DAU", val: data.dau },
+    { label: "WAU", val: data.wau },
+    { label: "MAU", val: data.mau },
+    { label: "Posts (30d)", val: data.posts_last },
+    { label: "Moods (30d)", val: data.moods_last },
+    { label: "Journals (30d)", val: data.journals_last },
+    { label: "XP earned (30d)", val: data.xp_last },
+  ];
+  const maxDay = Math.max(1, ...data.daily_active.map((d) => d.users));
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {cards.map((c) => (
+          <div key={c.label} className="lift rounded-2xl border border-border bg-card p-4">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">{c.label}</div>
+            <div className="text-2xl font-black mt-1">{c.val}</div>
+          </div>
+        ))}
+      </div>
+      <div className="lift rounded-2xl border border-border bg-card p-5">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Daily active (30d)</div>
+        <div className="mt-3 flex items-end gap-1 h-32">
+          {data.daily_active.map((d) => (
+            <div key={d.day} className="flex-1 rounded-md bg-gradient-to-t from-primary to-faith" style={{ height: `${(d.users / maxDay) * 100}%` }} title={`${d.day}: ${d.users}`} />
+          ))}
+          {!data.daily_active.length && <div className="text-xs text-muted-foreground self-center">No activity yet.</div>}
+        </div>
+      </div>
+      <div className="lift rounded-2xl border border-border bg-card p-5">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Actions by type (30d)</div>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm">
+          {Object.entries(data.by_action).sort((a, b) => b[1] - a[1]).map(([action, c]) => (
+            <div key={action} className="flex items-center justify-between border border-border bg-background rounded-lg px-3 py-2">
+              <span>{action}</span><span className="font-bold">{c}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
