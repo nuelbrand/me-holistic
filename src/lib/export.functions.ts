@@ -13,7 +13,7 @@ const TABLES = [
 
 export const exportUserData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<{ json: string }> => {
     const { supabase, userId } = context;
     const out: Record<string, unknown> = {
       exported_at: new Date().toISOString(),
@@ -23,18 +23,16 @@ export const exportUserData = createServerFn({ method: "GET" })
     };
     for (const t of TABLES) {
       try {
-        // Try user_id filter first, then sender/created_by for DMs/events
-        const q = supabase.from(t as never).select("*");
-        const filters = ["user_id", "author_id", "sender_id", "created_by", "id"] as const;
+        const filters = ["user_id", "author_id", "sender_id", "created_by"] as const;
         let data: unknown[] | null = null;
         for (const col of filters) {
-          const { data: rows, error } = await (q as any).eq(col, userId);
-          if (!error && Array.isArray(rows)) { data = rows; break; }
+          const res = await (supabase.from(t as never).select("*") as any).eq(col, userId);
+          if (!res.error && Array.isArray(res.data)) { data = res.data; break; }
         }
         out[t] = data ?? [];
       } catch {
         out[t] = [];
       }
     }
-    return out;
+    return { json: JSON.stringify(out, null, 2) };
   });
