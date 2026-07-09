@@ -1,11 +1,14 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Home, Sparkles, Brain, HeartPulse, Users, BookOpen, Shield, Moon, Sun, Menu, X, LogOut, Target, Flame, Trophy, MessageCircle, Handshake } from "lucide-react";
+import { Home, Sparkles, Brain, HeartPulse, Users, BookOpen, Shield, Menu, X, LogOut, Target, Flame, Trophy, MessageCircle, Handshake, Palette, Calendar, Mail, Download } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useApp, type Phase } from "@/lib/app-context";
 import { useAuth } from "@/lib/auth";
 import { useStats } from "@/lib/stats-context";
 import { cn } from "@/lib/utils";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { PWAInstall } from "@/components/PWAInstall";
+import { exportUserData } from "@/lib/export.functions";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: Home },
@@ -16,6 +19,8 @@ const NAV = [
 ];
 const MORE = [
   { to: "/community", label: "Community", icon: Users },
+  { to: "/messages", label: "Messages", icon: Mail },
+  { to: "/events", label: "Events", icon: Calendar },
   { to: "/challenges", label: "Challenges", icon: Trophy },
   { to: "/partners", label: "Partners", icon: Handshake },
   { to: "/goals", label: "Goals", icon: Target },
@@ -28,10 +33,25 @@ const PHASES: Phase[] = ["Student", "Employee", "Business Owner", "In-Transition
 
 export function AppShell({ children }: { children: ReactNode }) {
   const nav = useNavigate();
-  const { theme, toggleTheme, user, setPhase } = useApp();
+  const { user, setPhase } = useApp();
   const { role, signOut } = useAuth();
   const stats = useStats();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
+  const navItems = [...NAV, ...MORE.filter((m) => m.to !== "/admin" || role === "admin")];
+
+  const handleExport = async () => {
+    try {
+      const { json } = await exportUserData();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `me-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click(); URL.revokeObjectURL(url);
+      toast.success("Exported your data");
+    } catch { toast.error("Export failed"); }
+  };
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navItems = [...NAV, ...MORE.filter((m) => m.to !== "/admin" || role === "admin")];
 
