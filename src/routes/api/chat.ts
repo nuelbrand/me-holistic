@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { streamText, type ModelMessage } from "ai";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createLovableAiGatewayProvider, getAiConfig } from "@/lib/ai-gateway.server";
 
 const SYSTEM_PROMPT = `You are the AI Life Coach inside "me." — a holistic self-stewardship app that weaves together faith (Christian), mind (CBT + reflection), body (fitness + recovery), and community.
 
@@ -28,8 +28,7 @@ export const Route = createFileRoute("/api/chat")({
 
         const url = process.env.SUPABASE_URL;
         const anon = process.env.SUPABASE_PUBLISHABLE_KEY;
-        const key = process.env.LOVABLE_API_KEY;
-        if (!url || !anon || !key) return new Response("Server misconfigured", { status: 500 });
+        if (!url || !anon) return new Response("Server misconfigured", { status: 500 });
 
         const supabase = createClient(url, anon, {
           global: { headers: { Authorization: `Bearer ${token}` } },
@@ -72,9 +71,12 @@ Recent XP actions (7d): ${(xp ?? []).map((e: any) => e.action).join(", ") || "no
           ...incoming.map((m) => ({ role: m.role, content: m.content }) as ModelMessage),
         ];
 
-        const gateway = createLovableAiGatewayProvider(key);
+        let cfg;
+        try { cfg = await getAiConfig(); }
+        catch (e) { return new Response((e as Error).message, { status: 503 }); }
+        const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
         const result = streamText({
-          model: gateway("google/gemini-3-flash-preview"),
+          model: gateway(cfg.model),
           messages: modelMessages,
           onFinish: async ({ text }) => {
             const clean = (text ?? "").trim();

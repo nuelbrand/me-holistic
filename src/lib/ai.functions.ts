@@ -2,9 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createLovableAiGatewayProvider, getAiConfig } from "@/lib/ai-gateway.server";
 
-const MODEL = "google/gemini-3-flash-preview";
+
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -53,9 +53,8 @@ export const getDailyBriefing = createServerFn({ method: "POST" })
       supabase.from("xp_events").select("action, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
     ]);
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const context_str = `
 User: ${profile?.username || "friend"} · phase: ${profile?.life_phase || "Employee"} · focus: ${profile?.focus || "growth"}
@@ -65,7 +64,7 @@ Recent activity (last 20 XP events): ${(tasksXp ?? []).map((t: any) => t.action)
 `.trim();
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         {
           role: "system",
@@ -136,9 +135,8 @@ export const getWeeklyReview = createServerFn({ method: "POST" })
       supabase.from("goals").select("title, scope, status").eq("user_id", userId),
     ]);
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const totalXp = (xp ?? []).reduce((s: number, e: any) => s + (e.amount || 0), 0);
     const activityCount = (xp ?? []).length;
@@ -147,7 +145,7 @@ export const getWeeklyReview = createServerFn({ method: "POST" })
     const goalList = (goals ?? []).map((g: any) => `[${g.scope}/${g.status}] ${g.title}`).join(" | ");
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         {
           role: "system",
@@ -221,9 +219,8 @@ export const getJournalReflection = createServerFn({ method: "POST" })
       supabase.from("journal_entries").select("content, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(4),
     ]);
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const priorSnips = (recent ?? [])
       .slice(1)
@@ -231,7 +228,7 @@ export const getJournalReflection = createServerFn({ method: "POST" })
       .join("\n");
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         {
           role: "system",
@@ -272,12 +269,11 @@ export const suggestMemoryVerse = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ theme: z.string().min(1).max(80) }).parse(i))
   .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         { role: "system", content: `Return ONLY strict JSON: {"reference":"book chapter:verse","text":"the full verse in KJV"}. Pick a short, memorable verse (≤ 25 words) matching the theme. No markdown.` },
         { role: "user", content: `Theme: ${data.theme}` },
@@ -307,9 +303,8 @@ export const getBodyCoachAdvice = createServerFn({ method: "POST" })
       supabase.from("nutrition_logs").select("meal, calories, protein_g, log_date").eq("user_id", userId).gte("log_date", sinceDate).order("log_date", { ascending: false }).limit(30),
     ]);
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const workoutSum = (workouts ?? []).map((w: any) => `${w.kind} ${w.duration_min}m i${w.intensity}${w.distance_km ? ` ${w.distance_km}km` : ""}`).join(" | ") || "no workouts";
     const sleepAvg = (sleep ?? []).length ? ((sleep ?? []).reduce((s: number, r: any) => s + Number(r.hours), 0) / sleep!.length).toFixed(1) : "n/a";
@@ -319,7 +314,7 @@ export const getBodyCoachAdvice = createServerFn({ method: "POST" })
     const proteinAvg = (nutri ?? []).length ? Math.round((nutri ?? []).reduce((s: number, n: any) => s + (n.protein_g ?? 0), 0) / nutri!.length) : 0;
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         {
           role: "system",
