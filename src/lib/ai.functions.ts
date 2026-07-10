@@ -64,7 +64,7 @@ Recent activity (last 20 XP events): ${(tasksXp ?? []).map((t: any) => t.action)
 `.trim();
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         {
           role: "system",
@@ -145,7 +145,7 @@ export const getWeeklyReview = createServerFn({ method: "POST" })
     const goalList = (goals ?? []).map((g: any) => `[${g.scope}/${g.status}] ${g.title}`).join(" | ");
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         {
           role: "system",
@@ -228,7 +228,7 @@ export const getJournalReflection = createServerFn({ method: "POST" })
       .join("\n");
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         {
           role: "system",
@@ -273,7 +273,7 @@ export const suggestMemoryVerse = createServerFn({ method: "POST" })
     const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         { role: "system", content: `Return ONLY strict JSON: {"reference":"book chapter:verse","text":"the full verse in KJV"}. Pick a short, memorable verse (≤ 25 words) matching the theme. No markdown.` },
         { role: "user", content: `Theme: ${data.theme}` },
@@ -314,7 +314,7 @@ export const getBodyCoachAdvice = createServerFn({ method: "POST" })
     const proteinAvg = (nutri ?? []).length ? Math.round((nutri ?? []).reduce((s: number, n: any) => s + (n.protein_g ?? 0), 0) / nutri!.length) : 0;
 
     const { text } = await generateText({
-      model: gateway(MODEL),
+      model: gateway(cfg.model),
       messages: [
         {
           role: "system",
