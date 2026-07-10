@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          ai_api_key: string | null
+          ai_base_url: string | null
+          ai_model: string
+          ai_provider: string
+          created_at: string
+          id: string
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ai_api_key?: string | null
+          ai_base_url?: string | null
+          ai_model?: string
+          ai_provider?: string
+          created_at?: string
+          id?: string
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ai_api_key?: string | null
+          ai_base_url?: string | null
+          ai_model?: string
+          ai_provider?: string
+          created_at?: string
+          id?: string
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       challenge_progress: {
         Row: {
           challenge_id: string
