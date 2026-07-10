@@ -2,9 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createLovableAiGatewayProvider, getAiConfig } from "@/lib/ai-gateway.server";
 
-const MODEL = "google/gemini-3-flash-preview";
+
 
 function today() {
   return new Date().toISOString().slice(0, 10);
