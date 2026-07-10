@@ -53,9 +53,8 @@ export const getDailyBriefing = createServerFn({ method: "POST" })
       supabase.from("xp_events").select("action, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(20),
     ]);
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const context_str = `
 User: ${profile?.username || "friend"} · phase: ${profile?.life_phase || "Employee"} · focus: ${profile?.focus || "growth"}
@@ -136,9 +135,8 @@ export const getWeeklyReview = createServerFn({ method: "POST" })
       supabase.from("goals").select("title, scope, status").eq("user_id", userId),
     ]);
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const totalXp = (xp ?? []).reduce((s: number, e: any) => s + (e.amount || 0), 0);
     const activityCount = (xp ?? []).length;
@@ -221,9 +219,8 @@ export const getJournalReflection = createServerFn({ method: "POST" })
       supabase.from("journal_entries").select("content, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(4),
     ]);
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const priorSnips = (recent ?? [])
       .slice(1)
@@ -272,9 +269,8 @@ export const suggestMemoryVerse = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => z.object({ theme: z.string().min(1).max(80) }).parse(i))
   .handler(async ({ data }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const { text } = await generateText({
       model: gateway(MODEL),
@@ -307,9 +303,8 @@ export const getBodyCoachAdvice = createServerFn({ method: "POST" })
       supabase.from("nutrition_logs").select("meal, calories, protein_g, log_date").eq("user_id", userId).gte("log_date", sinceDate).order("log_date", { ascending: false }).limit(30),
     ]);
 
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
+    const cfg = await getAiConfig();
+    const gateway = createLovableAiGatewayProvider(cfg.apiKey, cfg.baseURL);
 
     const workoutSum = (workouts ?? []).map((w: any) => `${w.kind} ${w.duration_min}m i${w.intensity}${w.distance_km ? ` ${w.distance_km}km` : ""}`).join(" | ") || "no workouts";
     const sleepAvg = (sleep ?? []).length ? ((sleep ?? []).reduce((s: number, r: any) => s + Number(r.hours), 0) / sleep!.length).toFixed(1) : "n/a";
