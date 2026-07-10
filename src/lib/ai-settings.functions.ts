@@ -49,15 +49,14 @@ export const saveAiSettings = createServerFn({ method: "POST" })
     if (!isAdmin) throw new Response("Forbidden", { status: 403 });
 
     // Only update ai_api_key if a non-empty value is provided; empty string means "leave as-is"
-    const update: Record<string, unknown> = {
+    const hasNewKey = typeof data.ai_api_key === "string" && data.ai_api_key.trim().length > 0;
+    const update = {
       ai_provider: data.ai_provider,
       ai_model: data.ai_model,
       ai_base_url: data.ai_base_url?.trim() || null,
       updated_by: userId,
+      ...(hasNewKey ? { ai_api_key: (data.ai_api_key as string).trim() } : {}),
     };
-    if (typeof data.ai_api_key === "string" && data.ai_api_key.trim().length > 0) {
-      update.ai_api_key = data.ai_api_key.trim();
-    }
 
     const { error } = await supabase
       .from("app_settings")
